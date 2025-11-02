@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Felix Hub 2.1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .logo {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .lang-buttons {
+            display: flex;
+            gap: 15px;
+            flex-direction: column;
+        }
+        
+        .lang-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .lang-btn.ru {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .lang-btn.en {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .lang-btn.he {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .lang-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .lang-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .flag {
+            font-size: 1.5em;
+        }
+        
+        .admin-link {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #eee;
+        }
+        
+        .admin-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .admin-btn:hover {
+            background: #555;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .subtitle {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🔧</div>
+        <h1>Felix Hub 2.1</h1>
+        <p class="subtitle">Система управления заказами СТО</p>
+        
+        <div class="lang-buttons">
+            <a href="/mechanic?lang=ru" class="lang-btn ru">
+                <span class="flag">🇷🇺</span>
+                <span>Русский</span>
+            </a>
+            
+            <a href="/mechanic?lang=en" class="lang-btn en">
+                <span class="flag">🇬🇧</span>
+                <span>English</span>
+            </a>
+            
+            <a href="/mechanic?lang=he" class="lang-btn he">
+                <span class="flag">��</span>
+                <span>עברית</span>
+            </a>
+        </div>
+        
+        <div class="admin-link">
+            <a href="/admin" class="admin-btn">👨‍💼 Панель администратора</a>
+        </div>
+    </div>
+</body>
+</html>

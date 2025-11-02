@@ -1,0 +1,8 @@
+*.pyc
+__pycache__/
+.env
+felix_hub.db
+instance/
+.DS_Store
+uploads/
+venv/

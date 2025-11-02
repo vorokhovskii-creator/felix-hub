@@ -1,0 +1,34 @@
+services:
+  # Web Service - Flask приложение
+  - type: web
+    name: felix-hub
+    env: python
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: felix-hub-db
+          property: connectionString
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_CHAT_ID
+        sync: false
+    healthCheckPath: /
+
+  # PostgreSQL Database
+  - type: pgsql
+    name: felix-hub-db
+    region: frankfurt
+    plan: free
+    databaseName: felix_hub_db
+    databaseUser: felix_hub_user
