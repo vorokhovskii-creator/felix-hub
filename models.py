@@ -101,6 +101,74 @@ class Mechanic(UserMixin, db.Model):
         return f'<Mechanic {self.username}>'
 
 
+class Category(db.Model):
+    """
+    Модель категории запчастей
+    """
+    __tablename__ = 'categories'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    sort_order = db.Column(db.Integer, default=0)
+    
+    # Метаданные
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        """Преобразовать в словарь для API"""
+        # Подсчитываем количество запчастей в категории
+        parts_count = Part.query.filter_by(category=self.name).count()
+        active_parts_count = Part.query.filter_by(category=self.name, is_active=True).count()
+        
+        return {
+            'id': self.id,
+            'name': self.name,
+            'is_active': self.is_active,
+            'sort_order': self.sort_order,
+            'parts_count': parts_count,
+            'active_parts_count': active_parts_count,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        }
+    
+    def __repr__(self):
+        return f'<Category {self.name}>'
+
+
+class Part(db.Model):
+    """
+    Модель запчасти в справочнике
+    """
+    __tablename__ = 'parts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250), nullable=False)
+    category = db.Column(db.String(120), nullable=False, index=True)
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    sort_order = db.Column(db.Integer, default=0)
+    
+    # Метаданные
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        """Преобразовать в словарь для API"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'category': self.category,
+            'is_active': self.is_active,
+            'sort_order': self.sort_order,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+        }
+    
+    def __repr__(self):
+        return f'<Part {self.name}>'
+
+
 class Order(db.Model):
     """
     Модель заказа запчастей

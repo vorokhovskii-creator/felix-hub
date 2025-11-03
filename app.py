@@ -30,7 +30,7 @@ app.config['ALLOW_ANONYMOUS_ORDERS'] = os.getenv('ALLOW_ANONYMOUS_ORDERS', 'true
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Импорт моделей и авторизации
-from models import db, Mechanic, Order
+from models import db, Mechanic, Order, Part, Category
 from auth import login_manager, admin_required, mechanic_required, should_notify_mechanic
 
 # Инициализация расширений
@@ -265,7 +265,7 @@ def mechanic_orders():
 @mechanic_required
 def mechanic_new_order():
     """Форма создания нового заказа"""
-    return render_template('mechanic/order_form.html', catalog=PARTS_CATALOG)
+    return render_template('mechanic/order_form.html')
 
 
 @app.route('/mechanic/profile')
@@ -360,6 +360,12 @@ def admin():
 def admin_mechanics():
     """Панель управления механиками"""
     return render_template('admin/mechanics.html')
+
+@app.route('/admin/parts')
+@admin_required
+def admin_parts():
+    """Панель управления запчастями"""
+    return render_template('admin/parts.html')
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -828,6 +834,484 @@ def toggle_mechanic_active(mechanic_id):
         
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# API ДЛЯ УПРАВЛЕНИЯ СПРАВОЧНИКОМ ЗАПЧАСТЕЙ
+# ============================================================================
+
+@app.route('/api/parts', methods=['GET'])
+def get_parts():
+    """Получить список всех запчастей (доступно всем)"""
+    try:
+        category = request.args.get('category')
+        active_only = request.args.get('active_only', 'true').lower() == 'true'
+        
+        query = Part.query
+        
+        if active_only:
+            query = query.filter_by(is_active=True)
+        
+        if category:
+            query = query.filter_by(category=category)
+        
+        parts = query.order_by(Part.category, Part.sort_order, Part.name).all()
+        
+        return jsonify([part.to_dict() for part in parts])
+        
+    except Exception as e:
+        print(f"❌ Ошибка получения запчастей: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/parts/categories', methods=['GET'])
+def get_parts_categories():
+    """Получить список всех категорий"""
+    try:
+        # Получаем уникальные категории из базы данных
+        categories = db.session.query(Part.category).distinct().order_by(Part.category).all()
+        categories = [cat[0] for cat in categories]
+        
+        # Если категорий нет в БД, используем дефолтные
+        if not categories:
+            categories = list(PARTS_CATALOG.keys())
+        
+        return jsonify(categories)
+        
+    except Exception as e:
+        print(f"❌ Ошибка получения категорий: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/parts/catalog', methods=['GET'])
+def get_parts_catalog():
+    """Получить весь каталог в формате {категория: [запчасти]}"""
+    try:
+        active_only = request.args.get('active_only', 'true').lower() == 'true'
+        
+        query = Part.query
+        if active_only:
+            query = query.filter_by(is_active=True)
+        
+        parts = query.order_by(Part.category, Part.sort_order, Part.name).all()
+        
+        # Группируем по категориям
+        catalog = {}
+        for part in parts:
+            if part.category not in catalog:
+                catalog[part.category] = []
+            catalog[part.category].append(part.name)
+        
+        # Если каталог пуст, используем дефолтный
+        if not catalog:
+            catalog = PARTS_CATALOG
+        
+        return jsonify(catalog)
+        
+    except Exception as e:
+        print(f"❌ Ошибка получения каталога: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/parts', methods=['POST'])
+@admin_required
+def create_part():
+    """Создать новую запчасть"""
+    try:
+        data = request.get_json()
+        
+        # Валидация
+        if not data.get('name'):
+            return jsonify({'error': 'Название запчасти обязательно'}), 400
+        
+        if not data.get('category'):
+            return jsonify({'error': 'Категория обязательна'}), 400
+        
+        # Проверка на дубликаты
+        existing = Part.query.filter_by(
+            name=data['name'],
+            category=data['category']
+        ).first()
+        
+        if existing:
+            return jsonify({'error': 'Такая запчасть уже существует в этой категории'}), 400
+        
+        # Создание запчасти
+        part = Part(
+            name=data['name'].strip(),
+            category=data['category'].strip(),
+            is_active=data.get('is_active', True),
+            sort_order=data.get('sort_order', 0)
+        )
+        
+        db.session.add(part)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'part': part.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка создания запчасти: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/parts/<int:part_id>', methods=['GET'])
+@admin_required
+def get_part(part_id):
+    """Получить данные запчасти"""
+    part = Part.query.get_or_404(part_id)
+    return jsonify(part.to_dict())
+
+
+@app.route('/api/admin/parts/<int:part_id>', methods=['PUT'])
+@admin_required
+def update_part(part_id):
+    """Обновить запчасть"""
+    try:
+        part = Part.query.get_or_404(part_id)
+        data = request.get_json()
+        
+        if 'name' in data:
+            # Проверка на дубликаты при изменении имени
+            if data['name'] != part.name:
+                existing = Part.query.filter_by(
+                    name=data['name'],
+                    category=data.get('category', part.category)
+                ).first()
+                
+                if existing:
+                    return jsonify({'error': 'Такая запчасть уже существует в этой категории'}), 400
+            
+            part.name = data['name'].strip()
+        
+        if 'category' in data:
+            part.category = data['category'].strip()
+        
+        if 'is_active' in data:
+            part.is_active = data['is_active']
+        
+        if 'sort_order' in data:
+            part.sort_order = data['sort_order']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'part': part.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка обновления запчасти: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/parts/<int:part_id>', methods=['DELETE'])
+@admin_required
+def delete_part(part_id):
+    """Удалить запчасть"""
+    try:
+        part = Part.query.get_or_404(part_id)
+        
+        db.session.delete(part)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка удаления запчасти: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/parts/<int:part_id>/toggle-active', methods=['PUT'])
+@admin_required
+def toggle_part_active(part_id):
+    """Активировать/деактивировать запчасть"""
+    try:
+        part = Part.query.get_or_404(part_id)
+        part.is_active = not part.is_active
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'is_active': part.is_active
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка переключения активности запчасти: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/parts/bulk-create', methods=['POST'])
+@admin_required
+def bulk_create_parts():
+    """Массовое создание запчастей"""
+    try:
+        data = request.get_json()
+        parts_data = data.get('parts', [])
+        
+        if not parts_data:
+            return jsonify({'error': 'Список запчастей пуст'}), 400
+        
+        created = []
+        errors = []
+        
+        for item in parts_data:
+            try:
+                # Проверка на существование
+                existing = Part.query.filter_by(
+                    name=item['name'],
+                    category=item['category']
+                ).first()
+                
+                if existing:
+                    errors.append(f"Запчасть '{item['name']}' уже существует в категории '{item['category']}'")
+                    continue
+                
+                part = Part(
+                    name=item['name'].strip(),
+                    category=item['category'].strip(),
+                    is_active=item.get('is_active', True),
+                    sort_order=item.get('sort_order', 0)
+                )
+                
+                db.session.add(part)
+                created.append(part)
+                
+            except Exception as e:
+                errors.append(f"Ошибка создания '{item.get('name', 'unknown')}': {str(e)}")
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'created': len(created),
+            'errors': errors,
+            'parts': [p.to_dict() for p in created]
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка массового создания запчастей: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/parts/import-default', methods=['POST'])
+@admin_required
+def import_default_catalog():
+    """Импорт дефолтного каталога запчастей в БД"""
+    try:
+        created = []
+        skipped = []
+        
+        for category, parts in PARTS_CATALOG.items():
+            # Создаем категорию, если её нет
+            existing_cat = Category.query.filter_by(name=category).first()
+            if not existing_cat:
+                cat = Category(
+                    name=category,
+                    is_active=True,
+                    sort_order=len(Category.query.all())
+                )
+                db.session.add(cat)
+            
+            for idx, part_name in enumerate(parts):
+                # Проверка на существование
+                existing = Part.query.filter_by(
+                    name=part_name,
+                    category=category
+                ).first()
+                
+                if existing:
+                    skipped.append(f"{category} - {part_name}")
+                    continue
+                
+                part = Part(
+                    name=part_name,
+                    category=category,
+                    is_active=True,
+                    sort_order=idx
+                )
+                
+                db.session.add(part)
+                created.append(part)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'created': len(created),
+            'skipped': len(skipped),
+            'message': f'Импортировано {len(created)} запчастей, пропущено {len(skipped)} (уже существуют)'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка импорта каталога: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ============================================================================
+# API ДЛЯ УПРАВЛЕНИЯ КАТЕГОРИЯМИ
+# ============================================================================
+
+@app.route('/api/categories', methods=['GET'])
+def get_categories_api():
+    """Получить список всех категорий"""
+    try:
+        active_only = request.args.get('active_only', 'false').lower() == 'true'
+        
+        query = Category.query
+        if active_only:
+            query = query.filter_by(is_active=True)
+        
+        categories = query.order_by(Category.sort_order, Category.name).all()
+        
+        return jsonify([cat.to_dict() for cat in categories])
+        
+    except Exception as e:
+        print(f"❌ Ошибка получения категорий: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/categories', methods=['POST'])
+@admin_required
+def create_category():
+    """Создать новую категорию"""
+    try:
+        data = request.get_json()
+        
+        # Валидация
+        if not data.get('name'):
+            return jsonify({'error': 'Название категории обязательно'}), 400
+        
+        # Проверка уникальности
+        existing = Category.query.filter_by(name=data['name']).first()
+        if existing:
+            return jsonify({'error': 'Категория с таким именем уже существует'}), 400
+        
+        # Создание категории
+        category = Category(
+            name=data['name'].strip(),
+            is_active=data.get('is_active', True),
+            sort_order=data.get('sort_order', 0)
+        )
+        
+        db.session.add(category)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'category': category.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка создания категории: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/categories/<int:category_id>', methods=['GET'])
+@admin_required
+def get_category(category_id):
+    """Получить данные категории"""
+    category = Category.query.get_or_404(category_id)
+    return jsonify(category.to_dict())
+
+
+@app.route('/api/admin/categories/<int:category_id>', methods=['PUT'])
+@admin_required
+def update_category(category_id):
+    """Обновить категорию"""
+    try:
+        category = Category.query.get_or_404(category_id)
+        data = request.get_json()
+        
+        old_name = category.name
+        
+        if 'name' in data:
+            # Проверка на уникальность при изменении имени
+            if data['name'] != category.name:
+                existing = Category.query.filter_by(name=data['name']).first()
+                if existing:
+                    return jsonify({'error': 'Категория с таким именем уже существует'}), 400
+            
+            new_name = data['name'].strip()
+            
+            # Обновляем категорию у всех запчастей
+            Part.query.filter_by(category=old_name).update({'category': new_name})
+            
+            category.name = new_name
+        
+        if 'is_active' in data:
+            category.is_active = data['is_active']
+        
+        if 'sort_order' in data:
+            category.sort_order = data['sort_order']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'category': category.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка обновления категории: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/categories/<int:category_id>', methods=['DELETE'])
+@admin_required
+def delete_category(category_id):
+    """Удалить категорию"""
+    try:
+        category = Category.query.get_or_404(category_id)
+        
+        # Проверяем, есть ли запчасти в этой категории
+        parts_count = Part.query.filter_by(category=category.name).count()
+        if parts_count > 0:
+            return jsonify({
+                'error': f'Невозможно удалить категорию с запчастями ({parts_count}). Сначала удалите или переместите запчасти.'
+            }), 400
+        
+        db.session.delete(category)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка удаления категории: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/admin/categories/<int:category_id>/toggle-active', methods=['PUT'])
+@admin_required
+def toggle_category_active(category_id):
+    """Активировать/деактивировать категорию"""
+    try:
+        category = Category.query.get_or_404(category_id)
+        category.is_active = not category.is_active
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'is_active': category.is_active
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка переключения активности категории: {e}")
         return jsonify({'error': str(e)}), 500
 
 

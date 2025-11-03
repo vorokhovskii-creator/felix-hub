@@ -254,9 +254,6 @@
                 <label for="category">Категория запчастей *</label>
                 <select id="category" name="category" required>
                     <option value="">Выберите категорию</option>
-                    {% for cat in catalog.keys() %}
-                    <option value="{{ cat }}">{{ cat }}</option>
-                    {% endfor %}
                 </select>
             </div>
 
@@ -301,8 +298,29 @@
     </div>
 
     <script>
-        const catalog = {{ catalog|tojson }};
+        let catalog = {};
         let manualPartCounter = 0;
+
+        // Загрузка каталога из API
+        async function loadCatalog() {
+            try {
+                const response = await fetch('/api/parts/catalog?active_only=true');
+                catalog = await response.json();
+                
+                // Заполняем select категорий
+                const categorySelect = document.getElementById('category');
+                const categories = Object.keys(catalog).sort();
+                
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Ошибка загрузки каталога:', error);
+            }
+        }
 
         // Обработка изменения категории
         document.getElementById('category').addEventListener('change', function() {
@@ -424,6 +442,9 @@
                 `;
             }
         });
+        
+        // Загрузка каталога при загрузке страницы
+        loadCatalog();
     </script>
 </body>
 </html>
