@@ -35,6 +35,11 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('admin_logged_in'):
+            # Для API запросов возвращаем JSON ошибку
+            if request.is_json or request.path.startswith('/api/'):
+                from flask import jsonify
+                return jsonify({'error': 'Требуется авторизация администратора'}), 401
+            # Для обычных запросов - редирект
             flash('Требуется авторизация администратора', 'error')
             return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
@@ -49,10 +54,20 @@ def mechanic_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
+            # Для API запросов возвращаем JSON ошибку
+            if request.is_json or request.path.startswith('/api/'):
+                from flask import jsonify
+                return jsonify({'error': 'Требуется авторизация механика'}), 401
+            # Для обычных запросов - редирект
             flash('Пожалуйста, войдите в систему', 'warning')
             return redirect(url_for('mechanic_login', next=request.url))
         
         if not current_user.is_active:
+            # Для API запросов возвращаем JSON ошибку
+            if request.is_json or request.path.startswith('/api/'):
+                from flask import jsonify
+                return jsonify({'error': 'Ваш аккаунт деактивирован'}), 403
+            # Для обычных запросов - редирект
             flash('Ваш аккаунт деактивирован. Обратитесь к администратору', 'error')
             return redirect(url_for('mechanic_login'))
         
