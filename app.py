@@ -383,25 +383,41 @@ def admin_logout():
 @app.route('/api/orders')
 def get_orders():
     """API для получения списка заказов"""
-    # Фильтрация
-    status = request.args.get('status')
-    plate_number = request.args.get('plate_number')
-    mechanic = request.args.get('mechanic')
-    
-    query = Order.query
-    
-    if status and status != 'все':
-        query = query.filter_by(status=status)
-    
-    if plate_number:
-        query = query.filter(Order.plate_number.ilike(f'%{plate_number}%'))
-    
-    if mechanic:
-        query = query.filter(Order.mechanic_name.ilike(f'%{mechanic}%'))
-    
-    orders = query.order_by(Order.created_at.desc()).all()
-    
-    return jsonify([order.to_dict() for order in orders])
+    try:
+        # Фильтрация
+        status = request.args.get('status')
+        plate_number = request.args.get('plate_number')
+        mechanic = request.args.get('mechanic')
+        
+        query = Order.query
+        
+        if status and status != 'все':
+            query = query.filter_by(status=status)
+        
+        if plate_number:
+            query = query.filter(Order.plate_number.ilike(f'%{plate_number}%'))
+        
+        if mechanic:
+            query = query.filter(Order.mechanic_name.ilike(f'%{mechanic}%'))
+        
+        orders = query.order_by(Order.created_at.desc()).all()
+        
+        return jsonify([order.to_dict() for order in orders])
+    except Exception as e:
+        error_msg = str(e)
+        
+        # Специальная обработка ошибок БД
+        if 'does not exist' in error_msg:
+            error_msg = 'База данных не инициализирована. Выполните: python init_render_db.py'
+        
+        print(f"❌ Ошибка получения заказов: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return jsonify({
+            'error': error_msg,
+            'details': 'Проверьте логи сервера для подробностей'
+        }), 500
 
 @app.route('/api/orders/<int:order_id>', methods=['PUT'])
 def update_order(order_id):
@@ -617,8 +633,24 @@ def get_mechanic_stats():
 @admin_required
 def get_mechanics():
     """Получить список всех механиков"""
-    mechanics = Mechanic.query.order_by(Mechanic.created_at.desc()).all()
-    return jsonify([m.to_dict(include_stats=True) for m in mechanics])
+    try:
+        mechanics = Mechanic.query.order_by(Mechanic.created_at.desc()).all()
+        return jsonify([m.to_dict(include_stats=True) for m in mechanics])
+    except Exception as e:
+        error_msg = str(e)
+        
+        # Специальная обработка ошибок БД
+        if 'does not exist' in error_msg:
+            error_msg = 'База данных не инициализирована. Выполните: python init_render_db.py'
+        
+        print(f"❌ Ошибка получения механиков: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return jsonify({
+            'error': error_msg,
+            'details': 'Проверьте логи сервера для подробностей'
+        }), 500
 
 
 @app.route('/api/admin/mechanics', methods=['POST'])
@@ -673,7 +705,20 @@ def create_mechanic():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        error_msg = str(e)
+        
+        # Специальная обработка ошибок БД
+        if 'does not exist' in error_msg:
+            error_msg = 'База данных не инициализирована. Выполните: python init_render_db.py'
+        
+        print(f"❌ Ошибка создания механика: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        return jsonify({
+            'error': error_msg,
+            'details': 'Проверьте логи сервера для подробностей'
+        }), 500
 
 
 @app.route('/api/admin/mechanics/<int:mechanic_id>', methods=['GET'])
@@ -792,9 +837,29 @@ def toggle_mechanic_active(mechanic_id):
 
 # Инициализация базы данных
 def init_db():
+    """Инициализация базы данных с обработкой ошибок"""
     with app.app_context():
-        db.create_all()
-        print("✅ База данных инициализирована")
+        try:
+            # Попытка создать все таблицы
+            db.create_all()
+            print("✅ База данных инициализирована")
+            
+            # Проверка наличия таблиц
+            from sqlalchemy import inspect
+            inspector = inspect(db.engine)
+            tables = inspector.get_table_names()
+            print(f"📊 Найдено таблиц: {len(tables)}")
+            print(f"📋 Таблицы: {', '.join(tables)}")
+            
+            # Проверка наличия механиков
+            mechanic_count = Mechanic.query.count()
+            print(f"👥 Механиков в базе: {mechanic_count}")
+            
+        except Exception as e:
+            print(f"❌ Ошибка инициализации БД: {e}")
+            print("⚠️  Приложение продолжит работу, но функционал может быть ограничен")
+            import traceback
+            traceback.print_exc()
 
 # Инициализация при запуске через Gunicorn
 init_db()
