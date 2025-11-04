@@ -356,6 +356,28 @@ gunicorn -w 4 -b 0.0.0.0:8000 app:app
 - **Notifications**: Telegram Bot API
 - **Deployment**: Gunicorn, Nginx
 
+## 🚨 Устранение неполадок
+
+### Ошибка при импорте каталога на Render
+
+**Проблема:**
+```
+column categories.name_en does not exist
+```
+
+**Быстрое решение:**
+1. Откройте Shell на Render: [Dashboard](https://dashboard.render.com/) → felix-hub → Shell
+2. Запустите: `python fix_db_quick.py`
+3. Импортируйте каталог в админ-панели
+
+**Подробные инструкции:** См. [RENDER_FIX_CHEAT_SHEET.md](RENDER_FIX_CHEAT_SHEET.md)
+
+### Другие проблемы
+
+- **База данных:** См. [FIX_RENDER_DB.md](FIX_RENDER_DB.md)
+- **Telegram:** См. [TELEGRAM_SETUP_GUIDE.md](TELEGRAM_SETUP_GUIDE.md)
+- **Деплой:** См. [RENDER_TROUBLESHOOTING.md](RENDER_TROUBLESHOOTING.md)
+
 ---
 
 **Felix Hub 2.2** - Сделано с ❤️ для СТО Felix
