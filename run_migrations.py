@@ -21,11 +21,35 @@ def run_migrations():
             # Проверка существования колонки
             def column_exists(table_name, column_name):
                 try:
+                    # Validate table exists first
+                    if table_name not in inspector.get_table_names():
+                        print(f"⚠️  Таблица {table_name} не существует")
+                        raise ValueError(f"Table {table_name} does not exist")
+                    
                     columns = [col['name'] for col in inspector.get_columns(table_name)]
                     return column_name in columns
+                except ValueError:
+                    # Re-raise validation errors
+                    raise
                 except Exception as e:
                     print(f"⚠️  Ошибка проверки колонки {table_name}.{column_name}: {e}")
-                    return False
+                    # Re-raise to prevent silent failures
+                    raise
+            
+            # Validate inputs to prevent SQL injection
+            def validate_column_name(col_name):
+                """Validate column name contains only safe characters"""
+                import re
+                if not re.match(r'^[a-z_][a-z0-9_]*$', col_name):
+                    raise ValueError(f"Invalid column name: {col_name}")
+                return col_name
+            
+            def validate_column_type(col_type):
+                """Validate column type is in allowed list"""
+                allowed_types = ['VARCHAR(250)', 'VARCHAR(120)', 'TEXT']
+                if col_type not in allowed_types:
+                    raise ValueError(f"Invalid column type: {col_type}")
+                return col_type
             
             # Начинаем транзакцию
             with db.engine.connect() as conn:
@@ -46,8 +70,13 @@ def run_migrations():
                         ]
                         
                         for col_name, col_type, description in migrations_parts:
+                            # Validate inputs
+                            col_name = validate_column_name(col_name)
+                            col_type = validate_column_type(col_type)
+                            
                             if not column_exists('parts', col_name):
                                 print(f"  ➕ Добавление колонки '{col_name}' ({description})...")
+                                # Use text() with validated inputs
                                 conn.execute(text(f"ALTER TABLE parts ADD COLUMN {col_name} {col_type}"))
                             else:
                                 print(f"  ✓ Колонка '{col_name}' уже существует")
@@ -65,8 +94,13 @@ def run_migrations():
                         ]
                         
                         for col_name, col_type, description in migrations_categories:
+                            # Validate inputs
+                            col_name = validate_column_name(col_name)
+                            col_type = validate_column_type(col_type)
+                            
                             if not column_exists('categories', col_name):
                                 print(f"  ➕ Добавление колонки '{col_name}' ({description})...")
+                                # Use text() with validated inputs
                                 conn.execute(text(f"ALTER TABLE categories ADD COLUMN {col_name} {col_type}"))
                             else:
                                 print(f"  ✓ Колонка '{col_name}' уже существует")
