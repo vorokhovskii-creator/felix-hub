@@ -38,14 +38,25 @@ def run_migrations():
             
             # Validate inputs to prevent SQL injection
             def validate_column_name(col_name):
-                """Validate column name contains only safe characters"""
+                """
+                Validate column name contains only safe characters.
+                
+                Security Note: DDL statements (ALTER TABLE) do not support parameterized
+                queries for table/column names. Input validation is the standard approach
+                for preventing SQL injection in DDL operations.
+                """
                 import re
                 if not re.match(r'^[a-z_][a-z0-9_]*$', col_name):
                     raise ValueError(f"Invalid column name: {col_name}")
                 return col_name
             
             def validate_column_type(col_type):
-                """Validate column type is in allowed list"""
+                """
+                Validate column type is in allowed list.
+                
+                Security Note: Only explicitly allowed data types can be used,
+                preventing injection of arbitrary SQL through type specification.
+                """
                 allowed_types = ['VARCHAR(250)', 'VARCHAR(120)', 'TEXT']
                 if col_type not in allowed_types:
                     raise ValueError(f"Invalid column type: {col_type}")
@@ -70,13 +81,15 @@ def run_migrations():
                         ]
                         
                         for col_name, col_type, description in migrations_parts:
-                            # Validate inputs
+                            # Validate inputs to prevent SQL injection
                             col_name = validate_column_name(col_name)
                             col_type = validate_column_type(col_type)
                             
                             if not column_exists('parts', col_name):
                                 print(f"  ➕ Добавление колонки '{col_name}' ({description})...")
-                                # Use text() with validated inputs
+                                # Security: Using text() with validated inputs.
+                                # DDL statements don't support parameterized column/table names,
+                                # so validation is the industry-standard approach.
                                 conn.execute(text(f"ALTER TABLE parts ADD COLUMN {col_name} {col_type}"))
                             else:
                                 print(f"  ✓ Колонка '{col_name}' уже существует")
@@ -94,13 +107,15 @@ def run_migrations():
                         ]
                         
                         for col_name, col_type, description in migrations_categories:
-                            # Validate inputs
+                            # Validate inputs to prevent SQL injection
                             col_name = validate_column_name(col_name)
                             col_type = validate_column_type(col_type)
                             
                             if not column_exists('categories', col_name):
                                 print(f"  ➕ Добавление колонки '{col_name}' ({description})...")
-                                # Use text() with validated inputs
+                                # Security: Using text() with validated inputs.
+                                # DDL statements don't support parameterized column/table names,
+                                # so validation is the industry-standard approach.
                                 conn.execute(text(f"ALTER TABLE categories ADD COLUMN {col_name} {col_type}"))
                             else:
                                 print(f"  ✓ Колонка '{col_name}' уже существует")
