@@ -95,7 +95,16 @@ def run_auto_migrations(app):
     """Запуск всех автоматических миграций"""
     with app.app_context():
         try:
+            # Миграция категорий
             migrate_category_translations()
+            
+            # Миграция запчастей
+            try:
+                from migrate_parts_translations import migrate_parts_translations
+                migrate_parts_translations()
+            except Exception as e:
+                print(f"⚠️  Миграция запчастей пропущена: {e}")
+                
         except Exception as e:
             print(f"⚠️  Ошибка миграции: {e}")
             # Не останавливаем приложение из-за ошибки миграции
