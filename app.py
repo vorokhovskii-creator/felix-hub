@@ -259,9 +259,33 @@ def print_receipt(order):
 # Маршруты приложения
 
 @app.route('/health')
-def health_check():
-    """Health check endpoint for Render - doesn't require DB"""
-    return {'status': 'ok', 'service': 'felix-hub'}, 200
+def health():
+    """Health check endpoint для Render"""
+    return 'OK', 200
+
+@app.route('/admin/run-migrations-manually')
+@login_required
+def run_migrations_manually():
+    """Ручной запуск миграций БД (только для админов)"""
+    if not current_user.is_authenticated or current_user.username != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        # Импортируем функцию миграций
+        from init_render_db import run_migrations
+        
+        # Запускаем миграции
+        run_migrations()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Миграции успешно выполнены!'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/')
 def index():
