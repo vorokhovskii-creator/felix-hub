@@ -8,9 +8,19 @@
 
 import os
 import sys
-from app import app, db
-from models import Mechanic, Category
-from sqlalchemy import text, inspect
+
+# Добавляем текущую директорию в PATH
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    from app import app, db
+    from models import Mechanic, Category
+    from sqlalchemy import text, inspect
+except Exception as e:
+    print(f"❌ Ошибка импорта: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
 
 def column_exists(table_name, column_name):

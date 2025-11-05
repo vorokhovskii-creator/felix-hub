@@ -1614,7 +1614,13 @@ def update_category_translations():
         print(f"  ⚠️  Ошибка обновления переводов: {e}")
 
 # Инициализация при запуске через Gunicorn
-init_db()
+try:
+    init_db()
+except Exception as e:
+    print(f"⚠️  Ошибка инициализации БД при загрузке приложения: {e}")
+    print("⚠️  Приложение запустится, но БД может быть не инициализирована")
+    import traceback
+    traceback.print_exc()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)
