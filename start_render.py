@@ -5,13 +5,29 @@
 
 import os
 import sys
+import shutil
+
 
 def start_gunicorn():
     """Запуск Gunicorn с правильными параметрами"""
     port = os.getenv('PORT', '8000')
-    
+
+    # Диагностика окружения
+    print("=" * 60)
+    print("Felix Hub start diagnostics:")
+    print(f" CWD: {os.getcwd()}")
+    print(f" PYTHON: {sys.executable}")
+    print(f" PATH: {os.getenv('PATH')}")
+    print(f" PORT: {port}")
+    print("=" * 60)
+
+    # Проверим доступность gunicorn
+    gunicorn_path = shutil.which('gunicorn')
+    print(f" gunicorn found at: {gunicorn_path}")
+
+    # Формируем команду запуска через python -m gunicorn (надежнее в venv)
     cmd = [
-        'gunicorn',
+        sys.executable, '-m', 'gunicorn',
         'app:app',
         '--bind', f'0.0.0.0:{port}',
         '--workers', '1',
@@ -20,16 +36,14 @@ def start_gunicorn():
         '--log-level', 'info',
         '--access-logfile', '-',
         '--error-logfile', '-',
-        '--preload'  # Загружаем приложение перед fork (инициализирует БД)
     ]
-    
-    print("="*60)
-    print(f"🚀 Запуск Felix Hub на порту {port}")
-    print(f"Команда: {' '.join(cmd)}")
-    print("="*60)
-    
-    # Запускаем Gunicorn, передавая управление
-    os.execvp('gunicorn', cmd)
+
+    print(f"🚀 Launching: {' '.join(cmd)}")
+    print("=" * 60)
+
+    # Передаем управление процессу gunicorn
+    os.execv(sys.executable, cmd)
+
 
 if __name__ == '__main__':
     start_gunicorn()
