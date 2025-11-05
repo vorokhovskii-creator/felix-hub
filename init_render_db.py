@@ -34,83 +34,99 @@ def run_migrations():
     """Запуск необходимых миграций"""
     print("\n🔄 Проверка и запуск миграций...")
     
-    # Миграция 1: Добавление многоязычности для категорий
-    if not column_exists('categories', 'name_en'):
-        print("\n📋 Миграция: Добавление многоязычности для категорий...")
-        
-        try:
-            with db.engine.connect() as conn:
-                trans = conn.begin()
-                try:
-                    # Добавляем колонки для переводов
-                    conn.execute(text("ALTER TABLE categories ADD COLUMN name_en VARCHAR(120)"))
-                    conn.execute(text("ALTER TABLE categories ADD COLUMN name_he VARCHAR(120)"))
-                    conn.execute(text("ALTER TABLE categories ADD COLUMN name_ru VARCHAR(120)"))
-                    
-                    trans.commit()
-                    print("  ✓ Колонки для переводов добавлены")
-                    
-                except Exception as e:
-                    trans.rollback()
-                    print(f"  ❌ Ошибка: {e}")
-                    raise
-            
-            # Обновляем переводы для существующих категорий
-            CATEGORY_TRANSLATIONS = {
-                'Тормоза': {'en': 'Brakes', 'he': 'בלמים'},
-                'Двигатель': {'en': 'Engine', 'he': 'מנוע'},
-                'Подвеска': {'en': 'Suspension', 'he': 'מתלים'},
-                'Электрика': {'en': 'Electrical', 'he': 'חשמל'},
-                'Расходники': {'en': 'Consumables', 'he': 'מתכלים'},
-                'Добавки': {'en': 'Additives', 'he': 'תוספים'},
-                'Типуль': {'en': 'Maintenance', 'he': 'טיפול'}
-            }
-            
-            updated = 0
-            for ru_name, translations in CATEGORY_TRANSLATIONS.items():
-                category = Category.query.filter_by(name=ru_name).first()
-                if category:
-                    with db.engine.connect() as conn:
-                        trans = conn.begin()
-                        try:
-                            conn.execute(
-                                text("""
-                                    UPDATE categories 
-                                    SET name_ru = :name_ru,
-                                        name_en = :name_en,
-                                        name_he = :name_he
-                                    WHERE id = :id
-                                """),
-                                {
-                                    'id': category.id,
-                                    'name_ru': ru_name,
-                                    'name_en': translations['en'],
-                                    'name_he': translations['he']
-                                }
-                            )
-                            trans.commit()
-                            updated += 1
-                        except Exception as e:
-                            trans.rollback()
-                            print(f"  ⚠️  Не удалось обновить {ru_name}: {e}")
-            
-            print(f"  ✓ Обновлено переводов: {updated}")
-            
-        except Exception as e:
-            print(f"  ❌ Ошибка миграции категорий: {e}")
-            # Продолжаем работу, даже если миграция не удалась
-    else:
-        print("  ℹ️  Миграция категорий уже выполнена")
+    # Определяем тип БД
+    db_url = str(db.engine.url)
+    is_postgres = 'postgresql' in db_url
     
-    # Миграция 2: Добавление многоязычности для запчастей
-    if not column_exists('parts', 'name_en'):
-        print("\n📋 Миграция: Добавление многоязычности для запчастей...")
+    # Миграция 1: Добавление многоязычности для категорий
+    print("\n📋 Миграция: Проверка многоязычности для категорий...")
+    
+    try:
+        with db.engine.connect() as conn:
+            trans = conn.begin()
+            try:
+                if is_postgres:
+                    # PostgreSQL поддерживает IF NOT EXISTS
+                    conn.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS name_en VARCHAR(120)"))
+                    conn.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS name_he VARCHAR(120)"))
+                    conn.execute(text("ALTER TABLE categories ADD COLUMN IF NOT EXISTS name_ru VARCHAR(120)"))
+                else:
+                    # SQLite - проверяем вручную
+                    if not column_exists('categories', 'name_en'):
+                        conn.execute(text("ALTER TABLE categories ADD COLUMN name_en VARCHAR(120)"))
+                    if not column_exists('categories', 'name_he'):
+                        conn.execute(text("ALTER TABLE categories ADD COLUMN name_he VARCHAR(120)"))
+                    if not column_exists('categories', 'name_ru'):
+                        conn.execute(text("ALTER TABLE categories ADD COLUMN name_ru VARCHAR(120)"))
+                
+                trans.commit()
+                print("  ✓ Колонки для переводов категорий проверены/добавлены")
+                
+            except Exception as e:
+                trans.rollback()
+                print(f"  ⚠️ Ошибка при добавлении колонок: {e}")
         
-        try:
-            with db.engine.connect() as conn:
-                trans = conn.begin()
-                try:
-                    # Добавляем колонки для переводов
+        # Обновляем переводы для существующих категорий
+        CATEGORY_TRANSLATIONS = {
+            'Тормоза': {'en': 'Brakes', 'he': 'בלמים'},
+            'Двигатель': {'en': 'Engine', 'he': 'מנוע'},
+            'Подвеска': {'en': 'Suspension', 'he': 'מתלים'},
+            'Электрика': {'en': 'Electrical', 'he': 'חשמл'},
+            'Расходники': {'en': 'Consumables', 'he': 'מתכלים'},
+            'Добавки': {'en': 'Additives', 'he': 'תוספים'},
+            'Типуль': {'en': 'Maintenance', 'he': 'טיפול'}
+        }
+        
+        updated = 0
+        for ru_name, translations in CATEGORY_TRANSLATIONS.items():
+            category = Category.query.filter_by(name=ru_name).first()
+            if category:
+                with db.engine.connect() as conn:
+                    trans_db = conn.begin()
+                    try:
+                        conn.execute(
+                            text("""
+                                UPDATE categories 
+                                SET name_ru = :name_ru,
+                                    name_en = :name_en,
+                                    name_he = :name_he
+                                WHERE id = :id
+                            """),
+                            {
+                                'id': category.id,
+                                'name_ru': ru_name,
+                                'name_en': translations['en'],
+                                'name_he': translations['he']
+                            }
+                        )
+                        trans_db.commit()
+                        updated += 1
+                    except Exception as e:
+                        trans_db.rollback()
+                        print(f"  ⚠️  Не удалось обновить {ru_name}: {e}")
+        
+        if updated > 0:
+            print(f"  ✓ Обновлено переводов: {updated}")
+        
+    except Exception as e:
+        print(f"  ❌ Ошибка миграции категорий: {e}")
+        # Продолжаем работу, даже если миграция не удалась    # Миграция 2: Добавление многоязычности для запчастей
+    print("\n📋 Миграция: Проверка многоязычности для запчастей...")
+    
+    try:
+        with db.engine.connect() as conn:
+            trans = conn.begin()
+            try:
+                if is_postgres:
+                    # PostgreSQL поддерживает IF NOT EXISTS
+                    conn.execute(text("ALTER TABLE parts ADD COLUMN IF NOT EXISTS name_en VARCHAR(250)"))
+                    conn.execute(text("ALTER TABLE parts ADD COLUMN IF NOT EXISTS name_he VARCHAR(250)"))
+                    conn.execute(text("ALTER TABLE parts ADD COLUMN IF NOT EXISTS name_ru VARCHAR(250)"))
+                    conn.execute(text("ALTER TABLE parts ADD COLUMN IF NOT EXISTS description_en TEXT"))
+                    conn.execute(text("ALTER TABLE parts ADD COLUMN IF NOT EXISTS description_he TEXT"))
+                    conn.execute(text("ALTER TABLE parts ADD COLUMN IF NOT EXISTS description_ru TEXT"))
+                else:
+                    # SQLite - проверяем вручную
                     if not column_exists('parts', 'name_en'):
                         conn.execute(text("ALTER TABLE parts ADD COLUMN name_en VARCHAR(250)"))
                     if not column_exists('parts', 'name_he'):
@@ -123,19 +139,16 @@ def run_migrations():
                         conn.execute(text("ALTER TABLE parts ADD COLUMN description_he TEXT"))
                     if not column_exists('parts', 'description_ru'):
                         conn.execute(text("ALTER TABLE parts ADD COLUMN description_ru TEXT"))
-                    
-                    trans.commit()
-                    print("  ✓ Колонки для переводов запчастей добавлены")
-                    
-                except Exception as e:
-                    trans.rollback()
-                    print(f"  ❌ Ошибка: {e}")
-                    raise
-            
-        except Exception as e:
-            print(f"  ❌ Ошибка миграции запчастей: {e}")
-    else:
-        print("  ℹ️  Миграция запчастей уже выполнена")
+                
+                trans.commit()
+                print("  ✓ Колонки для переводов запчастей проверены/добавлены")
+                
+            except Exception as e:
+                trans.rollback()
+                print(f"  ⚠️ Ошибка при добавлении колонок: {e}")
+        
+    except Exception as e:
+        print(f"  ❌ Ошибка миграции запчастей: {e}")
 
 
 def init_database():
