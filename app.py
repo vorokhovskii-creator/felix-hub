@@ -1206,6 +1206,17 @@ def create_part():
             sort_order=data.get('sort_order', 0)
         )
         
+        # Автоматически добавляем переводы, если их нет
+        if not part.name_en or not part.name_he:
+            from migrate_parts_translations import find_translation
+            translation = find_translation(data['name_ru'])
+            if translation:
+                if not part.name_en:
+                    part.name_en = translation.get('en')
+                if not part.name_he:
+                    part.name_he = translation.get('he')
+                print(f"✅ Автоматически добавлен перевод для '{data['name_ru']}': EN='{part.name_en}', HE='{part.name_he}'")
+        
         db.session.add(part)
         db.session.commit()
         
@@ -1347,6 +1358,17 @@ def bulk_create_parts():
                     sort_order=item.get('sort_order', 0)
                 )
                 
+                # Автоматически добавляем переводы, если их нет
+                if not part.name_en or not part.name_he:
+                    from migrate_parts_translations import find_translation
+                    translation = find_translation(name_ru)
+                    if translation:
+                        if not part.name_en:
+                            part.name_en = translation.get('en')
+                        if not part.name_he:
+                            part.name_he = translation.get('he')
+                        print(f"✅ Автоматически добавлен перевод для '{name_ru}': EN='{part.name_en}', HE='{part.name_he}'")
+                
                 db.session.add(part)
                 created.append(part)
                 
@@ -1395,6 +1417,17 @@ def import_default_catalog():
                     is_active=True,
                     sort_order=idx
                 )
+                
+                # Автоматически добавляем переводы, если их нет
+                if not part.name_en or not part.name_he:
+                    from migrate_parts_translations import find_translation
+                    translation = find_translation(part_name)
+                    if translation:
+                        if not part.name_en:
+                            part.name_en = translation.get('en')
+                        if not part.name_he:
+                            part.name_he = translation.get('he')
+                        print(f"✅ Автоматически добавлен перевод для '{part_name}': EN='{part.name_en}', HE='{part.name_he}'")
                 
                 db.session.add(part)
                 created.append(part)
