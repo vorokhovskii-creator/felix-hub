@@ -10,6 +10,7 @@
     <title>{{ _('settings') }} - Felix Hub</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/language-switcher.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fixed-header-nav.css') }}">
     <style>
         * {
             margin: 0;
@@ -20,7 +21,6 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f7fa;
-            padding: 0;
             margin: 0;
         }
         
@@ -94,27 +94,7 @@
             font-size: 24px;
         }
 
-        .nav {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .nav a {
-            padding: 12px 24px;
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .nav a:hover, .nav a.active {
-            background: #667eea;
-            color: white;
-        }
+        /* Стили навигации перенесены в fixed-nav.css */
 
         .card {
             background: white;
@@ -276,33 +256,43 @@
     </style>
 </head>
 <body>
-    <!-- Language Switcher -->
-    <div id="languageSwitcher" class="language-switcher">
-        <select onchange="window.location.href='/set_language/' + this.value + '?redirect=' + encodeURIComponent(window.location.pathname)" class="lang-select">
-            <option value="ru" {{ 'selected' if g.locale == 'ru' else '' }}>🇷🇺 Русский</option>
-            <option value="en" {{ 'selected' if g.locale == 'en' else '' }}>🇬🇧 English</option>
-            <option value="he" {{ 'selected' if g.locale == 'he' else '' }}>🇮🇱 עברית</option>
-        </select>
-    </div>
     
     <div class="page-header">
         <div class="page-header-content">
             <h1>⚙️ {{ _('settings') if _('settings') != 'settings' else 'Настройки' }} - {{ current_user.full_name }}</h1>
             <div class="header-actions">
-                <a href="{{ url_for('mechanic_logout') }}" class="btn btn-logout">{{ _('logout') }}</a>
+                <!-- Переключатель языка -->
+                <div class="language-switcher">
+                    <div class="lang-buttons">
+                        <a href="/set_language/ru?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'ru' else '' }}" 
+                           title="Русский">🇷🇺</a>
+                        <a href="/set_language/en?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'en' else '' }}" 
+                           title="English">🇬🇧</a>
+                        <a href="/set_language/he?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'he' else '' }}" 
+                           title="עברית">🇮🇱</a>
+                    </div>
+                </div>
+                <a href="{{ url_for('mechanic_logout') }}" class="btn-logout">{{ _('logout') }}</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-wrapper">
+        <div class="nav-container">
+            <div class="nav">
+                <a href="{{ url_for('mechanic_dashboard') }}">{{ _('home') }}</a>
+                <a href="{{ url_for('mechanic_orders') }}">{{ _('my_orders') }}</a>
+                <a href="{{ url_for('mechanic_new_order') }}">{{ _('new_order') }}</a>
+                <a href="{{ url_for('mechanic_profile') }}">{{ _('profile') }}</a>
+                <a href="{{ url_for('mechanic_settings') }}" class="active">{{ _('settings') }}</a>
             </div>
         </div>
     </div>
     
     <div class="container">
-
-        <div class="nav">
-            <a href="{{ url_for('mechanic_dashboard') }}">{{ _('home') }}</a>
-            <a href="{{ url_for('mechanic_orders') }}">{{ _('my_orders') }}</a>
-            <a href="{{ url_for('mechanic_new_order') }}">{{ _('new_order') }}</a>
-            <a href="{{ url_for('mechanic_profile') }}">{{ _('profile') }}</a>
-            <a href="{{ url_for('mechanic_settings') }}" class="active">{{ _('settings') }}</a>
-        </div>
 
         <div class="card">
             <h2>📱 {{ _('telegram_notifications') }}</h2>
@@ -429,5 +419,6 @@
         });
     </script>
     <script src="{{ url_for('static', filename='js/mobile-enhancements.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nav-scroll.js') }}"></script>
 </body>
 </html>

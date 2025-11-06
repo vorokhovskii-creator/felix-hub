@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ g.locale or 'ru' }}" dir="{{ 'rtl' if g.locale == 'he' else 'ltr' }}">
+<html lang="{{ g.locale }}" dir="{{ 'rtl' if g.locale == 'he' else 'ltr' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
@@ -10,6 +10,7 @@
     <title>{{ _('my_orders') }} - Felix Hub</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/language-switcher.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fixed-header-nav.css') }}">
     <style>
         * {
             margin: 0;
@@ -20,99 +21,18 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f5f7fa;
-            padding: 0;
             margin: 0;
         }
         
-        .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
+        /* Стили шапки и навигации перенесены в fixed-header-nav.css */
         
-        .page-header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .page-header h1 {
-            font-size: 1.8em;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 15px;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 14px;
-        }
-        
-        .btn-white {
-            background: white;
-            color: #667eea;
-        }
-        
-        .btn-white:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 30px 20px;
         }
 
-        .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            display: none;
-        }
-
-        .header h1 {
-            color: #333;
-            font-size: 24px;
-        }
-
-        .nav {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-
-        .nav a {
-            padding: 12px 24px;
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .nav a:hover, .nav a.active {
-            background: #667eea;
-            color: white;
-        }
+        /* Стили навигации перенесены в fixed-header-nav.css */
         
         .btn-logout {
             background: white;
@@ -375,41 +295,43 @@
     </style>
 </head>
 <body>
-    <!-- Language Switcher -->
-    <div id="languageSwitcher" class="language-switcher">
-        <select onchange="window.location.href='/set_language/' + this.value + '?redirect=' + encodeURIComponent(window.location.pathname)" class="lang-select">
-            <option value="ru" {{ 'selected' if g.locale == 'ru' else '' }}>🇷🇺 Русский</option>
-            <option value="en" {{ 'selected' if g.locale == 'en' else '' }}>🇬🇧 English</option>
-            <option value="he" {{ 'selected' if g.locale == 'he' else '' }}>🇮🇱 עברית</option>
-        </select>
-    </div>
     
     <div class="page-header">
         <div class="page-header-content">
             <h1>🔧 {{ _('my_orders') }} - {{ current_user.full_name }}</h1>
             <div class="header-actions">
-                <a href="{{ url_for('mechanic_logout') }}" class="btn btn-logout">{{ _('logout') }}</a>
+                <!-- Переключатель языка -->
+                <div class="language-switcher">
+                    <div class="lang-buttons">
+                        <a href="/set_language/ru?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'ru' else '' }}" 
+                           title="Русский">🇷🇺</a>
+                        <a href="/set_language/en?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'en' else '' }}" 
+                           title="English">🇬🇧</a>
+                        <a href="/set_language/he?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'he' else '' }}" 
+                           title="עברית">🇮🇱</a>
+                    </div>
+                </div>
+                <a href="{{ url_for('mechanic_logout') }}" class="btn-logout">{{ _('logout') }}</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-wrapper">
+        <div class="nav-container">
+            <div class="nav">
+                <a href="{{ url_for('mechanic_dashboard') }}">{{ _('home') }}</a>
+                <a href="{{ url_for('mechanic_orders') }}" class="active">{{ _('my_orders') }}</a>
+                <a href="{{ url_for('mechanic_new_order') }}">{{ _('new_order') }}</a>
+                <a href="{{ url_for('mechanic_profile') }}">{{ _('profile') }}</a>
+                <a href="{{ url_for('mechanic_settings') }}">{{ _('settings') }}</a>
             </div>
         </div>
     </div>
 
     <div class="container">
-        <!-- Language Switcher -->
-        <div id="languageSwitcher" class="language-switcher">
-            <select onchange="window.location.href='/set_language/' + this.value + '?redirect=' + encodeURIComponent(window.location.pathname)" class="lang-select">
-                <option value="ru" {{ 'selected' if g.locale == 'ru' else '' }}>🇷🇺 Русский</option>
-                <option value="en" {{ 'selected' if g.locale == 'en' else '' }}>🇬🇧 English</option>
-                <option value="he" {{ 'selected' if g.locale == 'he' else '' }}>🇮🇱 עברית</option>
-            </select>
-        </div>
-
-        <div class="nav">
-            <a href="{{ url_for('mechanic_dashboard') }}">{{ _('home') }}</a>
-            <a href="{{ url_for('mechanic_orders') }}" class="active">{{ _('my_orders') }}</a>
-            <a href="{{ url_for('mechanic_new_order') }}">{{ _('new_order') }}</a>
-            <a href="{{ url_for('mechanic_profile') }}">{{ _('profile') }}</a>
-            <a href="{{ url_for('mechanic_settings') }}">{{ _('settings') }}</a>
-        </div>
 
         <div class="filters">
             <form method="GET" action="{{ url_for('mechanic_orders') }}">
@@ -513,5 +435,6 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/mobile-enhancements.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nav-scroll.js') }}"></script>
 </body>
 </html>
