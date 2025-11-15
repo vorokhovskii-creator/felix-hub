@@ -73,6 +73,17 @@
             background: rgba(255,255,255,0.2);
             color: white;
         }
+        
+        .btn-back {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-back:hover {
+            background: white;
+            color: #667eea;
+        }
 
         .container {
             max-width: 800px;
@@ -275,6 +286,7 @@
                            title="עברית">🇮🇱</a>
                     </div>
                 </div>
+                <a href="{{ url_for('mechanic_new_order') }}" class="btn btn-back">← {{ _('back') }}</a>
                 <a href="{{ url_for('mechanic_logout') }}" class="btn-logout">{{ _('logout') }}</a>
             </div>
         </div>
