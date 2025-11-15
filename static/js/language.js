@@ -26,6 +26,9 @@ const translations = {
         'edit': 'Редактировать',
         'delete': 'Удалить',
         'toggle_status': 'Изменить статус',
+        // Навигация мобильного меню
+        'menu': 'Меню',
+        'close': 'Закрыть',
         
         // Фильтры
         'search_placeholder': 'Поиск по названию или категории...',
@@ -120,6 +123,9 @@ const translations = {
         'edit': 'Edit',
         'delete': 'Delete',
         'toggle_status': 'Toggle Status',
+        // Mobile menu
+        'menu': 'Menu',
+        'close': 'Close',
         
         // Filters
         'search_placeholder': 'Search by name or category...',
@@ -214,6 +220,9 @@ const translations = {
         'edit': 'ערוך',
         'delete': 'מחק',
         'toggle_status': 'שנה סטטוס',
+        // תפריט נייד
+        'menu': 'תפריט',
+        'close': 'סגור',
         
         // מסננים
         'search_placeholder': 'חפש לפי שם או קטגוריה...',

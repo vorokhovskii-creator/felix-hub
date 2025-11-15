@@ -32,7 +32,11 @@
         // Создаем бургер кнопку с улучшенным дизайном
         const burgerBtn = document.createElement('button');
         burgerBtn.className = 'nav-toggle';
-        burgerBtn.innerHTML = '<span>Меню</span>';
+        try {
+            burgerBtn.innerHTML = `<span>${typeof t === 'function' ? t('menu') : 'Меню'}</span>`;
+        } catch (_) {
+            burgerBtn.innerHTML = '<span>Меню</span>';
+        }
         burgerBtn.setAttribute('aria-label', 'Toggle navigation');
         burgerBtn.setAttribute('aria-expanded', 'false');
         
@@ -61,9 +65,9 @@
             
             // Анимация иконки
             if (isExpanded) {
-                this.querySelector('span').textContent = 'Закрыть';
+                this.querySelector('span').textContent = (typeof t === 'function' ? t('close') : 'Закрыть');
             } else {
-                this.querySelector('span').textContent = 'Меню';
+                this.querySelector('span').textContent = (typeof t === 'function' ? t('menu') : 'Меню');
             }
         });
         
@@ -73,7 +77,7 @@
                 burgerBtn.classList.remove('active');
                 navItemsContainer.classList.remove('active');
                 burgerBtn.setAttribute('aria-expanded', 'false');
-                burgerBtn.querySelector('span').textContent = 'Меню';
+                burgerBtn.querySelector('span').textContent = (typeof t === 'function' ? t('menu') : 'Меню');
             }
         });
         
@@ -83,7 +87,7 @@
                 burgerBtn.classList.remove('active');
                 navItemsContainer.classList.remove('active');
                 burgerBtn.setAttribute('aria-expanded', 'false');
-                burgerBtn.querySelector('span').textContent = 'Меню';
+                burgerBtn.querySelector('span').textContent = (typeof t === 'function' ? t('menu') : 'Меню');
             });
         });
     }

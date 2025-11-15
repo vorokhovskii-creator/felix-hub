@@ -450,6 +450,40 @@
     
     <script>
         let orders = [];
+        let partsIndexByCategory = {};
+        async function preloadPartsIndex() {
+            try {
+                const resp = await fetch('/api/parts/catalog?active_only=true&lang=ru');
+                const catalog = await resp.json();
+                const idx = {};
+                for (const [catName, list] of Object.entries(catalog)) {
+                    const map = { byId: {}, byName: {} };
+                    for (let i = 0; i < list.length; i++) {
+                        const p = list[i];
+                        if (p && typeof p === 'object') {
+                            if (p.id != null) map.byId[p.id] = i;
+                            if (p.name != null) map.byName[p.name] = i;
+                        }
+                    }
+                    idx[catName] = map;
+                }
+                partsIndexByCategory = idx;
+            } catch (_) {
+                partsIndexByCategory = {};
+            }
+        }
+        function partOrderIndex(item, map) {
+            if (!map) return Number.MAX_SAFE_INTEGER;
+            if (item && typeof item === 'object') {
+                const pid = item.part_id;
+                const nm = item.name;
+                if (pid != null && map.byId.hasOwnProperty(pid)) return map.byId[pid];
+                if (nm != null && map.byName.hasOwnProperty(nm)) return map.byName[nm];
+                return Number.MAX_SAFE_INTEGER;
+            }
+            if (map.byName.hasOwnProperty(item)) return map.byName[item];
+            return Number.MAX_SAFE_INTEGER;
+        }
         function escapeHtml(str) {
             if (str == null) return '';
             return String(str)
@@ -462,15 +496,13 @@
         
         // Загрузка заказов при старте
         window.addEventListener('DOMContentLoaded', () => {
-            loadOrders();
-            
-            // Автообновление каждые 30 секунд
-            setInterval(loadOrders, 30000);
-            
-            // Обработчики фильтров
-            document.getElementById('filterStatus').addEventListener('change', loadOrders);
-            document.getElementById('filterPlate').addEventListener('input', debounce(loadOrders, 500));
-            document.getElementById('filterMechanic').addEventListener('input', debounce(loadOrders, 500));
+            preloadPartsIndex().finally(() => {
+                loadOrders();
+                setInterval(loadOrders, 30000);
+                document.getElementById('filterStatus').addEventListener('change', loadOrders);
+                document.getElementById('filterPlate').addEventListener('input', debounce(loadOrders, 500));
+                document.getElementById('filterMechanic').addEventListener('input', debounce(loadOrders, 500));
+            });
         });
         
         // Загрузка заказов с сервера
@@ -530,6 +562,9 @@
             `;
             
             orders.forEach(order => {
+                const map = partsIndexByCategory[order.category];
+                const selectedParts = Array.isArray(order.selected_parts) ? [...order.selected_parts] : [];
+                if (map) selectedParts.sort((a, b) => partOrderIndex(a, map) - partOrderIndex(b, map));
                 html += `
                     <tr>
                         <td><strong>#${order.id}</strong></td>
@@ -539,7 +574,7 @@
                         <td>
                             <div class="parts-list">
                                 <ul>
-                                    ${order.selected_parts.map(p => {
+                                    ${selectedParts.map(p => {
                                         if (typeof p === 'object' && p.name) {
                                             const qty = p.quantity > 1 ? ` <strong style="color: #667eea;">(x${p.quantity})</strong>` : '';
                                             const added = p.added_by_mechanic ? ' <span class="added-badge">➕</span>' : '';
@@ -552,7 +587,7 @@
                                     ${order.is_original 
                                         ? '<span class="type-badge type-original">ОРИГИНАЛ</span>' 
                                         : '<span class="type-badge type-analog">АНАЛОГ</span>'}
-                                    ${order.selected_parts.some(p => typeof p === 'object' && p.added_by_mechanic) 
+                                    ${selectedParts.some(p => typeof p === 'object' && p.added_by_mechanic) 
                                         ? '<div class="added-notice">➕ Добавлена новая запчасть</div>' 
                                         : ''}
                                     ${order.comment ? `<div style="margin-top:8px; padding:10px; background:#fff3cd; color:#856404; border-radius:8px;">

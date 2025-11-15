@@ -415,7 +415,7 @@
                         </ul>
                     </div>
                     <div class="add-part-box" style="margin-top:10px;">
-                        <button class="btn btn-secondary" onclick="toggleAddPart({{ order.id }}, '{{ order.category }}')">+ Добавить деталь</button>
+                        <button class="btn btn-secondary" onclick="toggleAddPart({{ order.id }}, '{{ order.category }}')">+ {{ _('add_part') }}</button>
                         <div id="addPartForm-{{ order.id }}" style="display:none; margin-top:8px;">
                             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                                 <select id="addPartCategory-{{ order.id }}" style="padding:8px; border:2px solid #e0e0e0; border-radius:8px;"></select>
