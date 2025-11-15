@@ -225,6 +225,22 @@
         .parts-list li {
             margin: 2px 0;
         }
+        .type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.85em;
+            letter-spacing: 0.03em;
+        }
+        .type-original {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+        .type-analog {
+            background: #f8d7da;
+            color: #721c24;
+        }
         
         .action-buttons {
             display: flex;
@@ -508,13 +524,19 @@
                                     ${order.selected_parts.map(p => {
                                         if (typeof p === 'object' && p.name) {
                                             const qty = p.quantity > 1 ? ` <strong style="color: #667eea;">(x${p.quantity})</strong>` : '';
-                                            return `<li>${p.name}${qty}</li>`;
+                                            return `<li>${escapeHtml(p.name)}${qty}</li>`;
                                         } else {
-                                            return `<li>${p}</li>`;
+                                            return `<li>${escapeHtml(p)}</li>`;
                                         }
                                     }).join('')}
                                 </ul>
-                                ${order.is_original ? '🔧 Оригинал' : '💰 Аналог'}
+                                ${order.is_original 
+                                    ? '<span class="type-badge type-original">ОРИГИНАЛ</span>' 
+                                    : '<span class="type-badge type-analog">АНАЛОГ</span>'}
+                                ${order.comment ? `<div style="margin-top:8px; padding:10px; background:#fff3cd; color:#856404; border-radius:8px;">
+                                    <strong>💬 ${`{{ _('comment') }}`}: </strong>
+                                    <span>${escapeHtml(order.comment)}</span>
+                                </div>` : ''}
                             </div>
                         </td>
                         <td style="max-width: 280px; white-space: break-spaces; word-break: break-word;">

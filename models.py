@@ -320,6 +320,33 @@ class Order(db.Model):
             else:
                 # Совсем старый формат (просто строка)
                 selected_parts_translated.append(part)
+
+        # Сортировка по порядковому номеру из БД
+        try:
+            parts_in_category = Part.query.filter_by(category=self.category).all()
+            id_to_order = {p.id: (p.sort_order if p.sort_order is not None else 0) for p in parts_in_category}
+            name_to_order = {}
+            for p in parts_in_category:
+                for nm in [p.name_ru, p.name_en, p.name_he, p.name]:
+                    if nm:
+                        name_to_order[nm] = (p.sort_order if p.sort_order is not None else 0)
+            max_order = max([o for o in id_to_order.values()] + [0])
+            def sort_key(item, idx):
+                if isinstance(item, dict):
+                    pid = item.get('part_id')
+                    nm = item.get('name')
+                    if pid in id_to_order:
+                        return (id_to_order[pid], idx)
+                    if nm in name_to_order:
+                        return (name_to_order[nm], idx)
+                    return (max_order + 1, idx)
+                else:
+                    if item in name_to_order:
+                        return (name_to_order[item], idx)
+                    return (max_order + 1, idx)
+            selected_parts_translated = [x for _, x in sorted([(sort_key(it, i), it) for i, it in enumerate(selected_parts_translated)], key=lambda t: t[0])]
+        except Exception:
+            pass
         
         data = {
             'id': self.id,
