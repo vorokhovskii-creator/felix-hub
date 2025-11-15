@@ -1219,7 +1219,14 @@ def get_parts():
             query = query.filter_by(is_active=True)
         
         if category:
-            query = query.filter_by(category=category)
+            cat_obj = Category.query.filter(
+                (Category.name == category) |
+                (Category.name_ru == category) |
+                (Category.name_en == category) |
+                (Category.name_he == category)
+            ).first()
+            raw_cat = cat_obj.name if cat_obj else category
+            query = query.filter(db.func.lower(Part.category) == raw_cat.lower())
         
         parts = query.order_by(Part.category, Part.sort_order, Part.name_ru).all()
         
