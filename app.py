@@ -40,10 +40,11 @@ app.config['LANGUAGES'] = {
 # Создаем экземпляр Babel (инициализация позже)
 babel = Babel()
 
-# Исправление DATABASE_URL для PostgreSQL (Render использует postgres://, SQLAlchemy требует postgresql://)
 database_url = os.getenv('DATABASE_URL', 'sqlite:///instance/felix_hub.db')
 if database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    database_url = database_url.replace('postgres://', 'postgresql+psycopg://', 1)
+elif database_url.startswith('postgresql://'):
+    database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -1777,4 +1778,3 @@ print("="*60)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)
-
