@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 import requests
 from dotenv import load_dotenv
+from sqlalchemy.engine.url import make_url, URL
 from migrate_parts_translations import find_translation
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -41,12 +42,26 @@ app.config['LANGUAGES'] = {
 babel = Babel()
 
 database_url = os.getenv('DATABASE_URL', 'sqlite:///instance/felix_hub.db')
-if database_url.startswith('postgresql+psycopg2://'):
-    database_url = database_url.replace('postgresql+psycopg2://', 'postgresql+psycopg://', 1)
-elif database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql+psycopg://', 1)
-elif database_url.startswith('postgresql://'):
-    database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+try:
+    url = make_url(database_url)
+    drv = url.drivername.lower()
+    if drv.startswith('postgres'):
+        database_url = str(URL.create(
+            drivername='postgresql+psycopg',
+            username=url.username,
+            password=url.password,
+            host=url.host,
+            port=url.port,
+            database=url.database,
+            query=url.query,
+        ))
+except Exception:
+    if database_url.startswith('postgresql+psycopg2://'):
+        database_url = database_url.replace('postgresql+psycopg2://', 'postgresql+psycopg://', 1)
+    elif database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql+psycopg://', 1)
+    elif database_url.startswith('postgresql://'):
+        database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
