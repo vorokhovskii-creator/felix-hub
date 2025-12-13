@@ -404,9 +404,20 @@
 
             <div class="form-group">
                 <label>{{ _('select_parts_from_list') }}:</label>
-                <div id="partsList" class="checkbox-group">
-                    <p style="color: #999; font-size: 14px;">{{ _('select_category_first') }}</p>
+                
+                <div class="part-selector-container" style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
+                     <select id="availablePartsSelect" style="flex: 1;" disabled>
+                         <option value="">{{ _('select_category_first') }}</option>
+                     </select>
+                     <button type="button" id="btnAddPartFromList" class="btn-add-part" style="margin-top: 0; white-space: nowrap;" disabled onclick="addPartFromSelect()">
+                         + {{ _('add_part') }}
+                     </button>
                 </div>
+
+                <div id="selectedPartsList" class="checkbox-group">
+                    <!-- Selected parts will appear here -->
+                </div>
+
                 <div style="font-size: 0.9em; color: #666; margin-top: 10px;">
                     <span id="partsCounter">{{ _('selected') if _('selected') != 'selected' else 'Выбрано' }}: 0</span>
                 </div>
@@ -479,96 +490,122 @@
         // Обработка изменения категории
         document.getElementById('category').addEventListener('change', function() {
             const category = this.value;
-            const partsList = document.getElementById('partsList');
+            const partsSelect = document.getElementById('availablePartsSelect');
+            const btnAdd = document.getElementById('btnAddPartFromList');
+            
+            // Очищаем select
+            partsSelect.innerHTML = '';
             
             if (!category) {
-                partsList.innerHTML = '<p style="color: #999; font-size: 14px;">{{ _("select_category_first") }}</p>';
+                const defaultOption = document.createElement('option');
+                defaultOption.value = "";
+                defaultOption.textContent = '{{ _("select_category_first") }}';
+                partsSelect.appendChild(defaultOption);
+                partsSelect.disabled = true;
+                btnAdd.disabled = true;
                 return;
             }
 
+            partsSelect.disabled = false;
+            btnAdd.disabled = false;
+
             const parts = catalog[category] || [];
-            partsList.innerHTML = '';
+            
+            // Сортируем запчасти по имени для удобства
+            parts.sort((a, b) => {
+                const nameA = typeof a === 'object' ? a.name : a;
+                const nameB = typeof b === 'object' ? b.name : b;
+                return nameA.localeCompare(nameB);
+            });
 
             parts.forEach(part => {
-                const item = document.createElement('label');
-                item.className = 'checkbox-item';
+                const option = document.createElement('option');
                 
-                // Поддержка нового формата (объект с id и name) и старого (просто строка)
                 const partId = typeof part === 'object' ? part.id : null;
                 const partName = typeof part === 'object' ? part.name : part;
-                const partKey = partId || partName; // Ключ для selectedPartsGlobal
                 
-                // Проверяем, была ли эта деталь уже выбрана
-                const isChecked = selectedPartsGlobal.hasOwnProperty(partKey);
-                const quantity = isChecked ? selectedPartsGlobal[partKey].quantity : 1;
-                
-                if (isChecked) {
-                    item.classList.add('checked');
+                option.value = partName;
+                if (partId) {
+                    option.setAttribute('data-part-id', partId);
                 }
+                option.textContent = partName;
                 
-                const safeId = 'part_' + partName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                partsSelect.appendChild(option);
+            });
+        });
+
+        // Функция добавления детали из списка
+        function addPartFromSelect() {
+            const select = document.getElementById('availablePartsSelect');
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (!selectedOption || !selectedOption.value) return;
+            
+            const partName = selectedOption.value;
+            const partId = selectedOption.getAttribute('data-part-id');
+            const partKey = partId || partName;
+            
+            if (!selectedPartsGlobal[partKey]) {
+                selectedPartsGlobal[partKey] = {
+                    name: partName,
+                    quantity: 1,
+                    part_id: partId ? parseInt(partId) : null
+                };
+                renderSelectedParts();
+                updatePartsCounter();
+            } else {
+                alert('{{ _("part_already_added") if _("part_already_added") != "part_already_added" else "Деталь уже добавлена" }}');
+            }
+        }
+
+        // Рендеринг списка выбранных деталей
+        function renderSelectedParts() {
+            const list = document.getElementById('selectedPartsList');
+            list.innerHTML = '';
+            
+            for (const key in selectedPartsGlobal) {
+                const part = selectedPartsGlobal[key];
+                
+                const item = document.createElement('div');
+                item.className = 'manual-part-item';
+                item.style.backgroundColor = '#f8f9fa';
+                item.style.padding = '10px';
+                item.style.borderRadius = '8px';
+                item.style.border = '1px solid #e0e0e0';
                 
                 item.innerHTML = `
-                    <input type="checkbox" 
-                           id="${safeId}"
-                           name="selected_parts" 
-                           value="${partName}"
-                           data-part-id="${partId || ''}"
-                           ${isChecked ? 'checked' : ''}>
-                    <span class="part-name">${partName}</span>
-                    <div class="quantity-control">
-                        <label>{{ _('quantity') if _('quantity') != 'quantity' else 'Кол-во' }}:</label>
+                    <span style="flex: 1; font-weight: 500;">${part.name}</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
                         <input type="number" 
                                min="1" 
                                max="999" 
-                               value="${quantity}"
-                               class="part-quantity"
-                               onclick="event.stopPropagation()">
+                               value="${part.quantity}"
+                               class="selected-part-quantity"
+                               style="width: 60px; padding: 5px;"
+                               onchange="updatePartQuantity('${key}', this.value)">
+                        <button type="button" onclick="removePartFromList('${key}')" style="background: #ef4444; color: white; border: none; border-radius: 5px; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
                     </div>
                 `;
-                partsList.appendChild(item);
                 
-                // Добавляем обработчик изменения чекбокса
-                const checkbox = item.querySelector('input[type="checkbox"]');
-                const quantityInput = item.querySelector('.part-quantity');
-                
-                checkbox.addEventListener('change', function() {
-                    const partId = this.getAttribute('data-part-id');
-                    const partKey = partId || this.value;
-                    
-                    // Переключаем класс checked на родительском label
-                    if (this.checked) {
-                        item.classList.add('checked');
-                        // Добавляем в глобальный объект с количеством и ID
-                        selectedPartsGlobal[partKey] = {
-                            name: this.value,
-                            quantity: parseInt(quantityInput.value) || 1,
-                            part_id: partId ? parseInt(partId) : null
-                        };
-                    } else {
-                        item.classList.remove('checked');
-                        // Удаляем из глобального объекта
-                        delete selectedPartsGlobal[partKey];
-                    }
-                    updatePartsCounter();
-                });
-                
-                // Обработчик изменения количества
-                quantityInput.addEventListener('change', function(e) {
-                    e.stopPropagation();
-                    if (checkbox.checked) {
-                        const qty = parseInt(this.value) || 1;
-                        this.value = Math.max(1, Math.min(999, qty));
-                        const partId = checkbox.getAttribute('data-part-id');
-                        const partKey = partId || checkbox.value;
-                        if (selectedPartsGlobal[partKey]) {
-                            selectedPartsGlobal[partKey].quantity = parseInt(this.value);
-                        }
-                    }
-                });
-            });
-            updatePartsCounter();
-        });
+                list.appendChild(item);
+            }
+        }
+
+        function updatePartQuantity(key, value) {
+            if (selectedPartsGlobal[key]) {
+                let qty = parseInt(value) || 1;
+                qty = Math.max(1, Math.min(999, qty));
+                selectedPartsGlobal[key].quantity = qty;
+            }
+        }
+
+        function removePartFromList(key) {
+            if (selectedPartsGlobal[key]) {
+                delete selectedPartsGlobal[key];
+                renderSelectedParts();
+                updatePartsCounter();
+            }
+        }
         
         // Обновление счётчика выбранных деталей
         function updatePartsCounter() {
@@ -685,7 +722,14 @@
                     
                     // Очистка формы и глобального объекта
                     document.getElementById('orderForm').reset();
-                    document.getElementById('partsList').innerHTML = '<p style="color: #999; font-size: 14px;">{{ _("select_category_first") }}</p>';
+                    document.getElementById('selectedPartsList').innerHTML = '';
+                    const partsSelect = document.getElementById('availablePartsSelect');
+                    if (partsSelect) {
+                        partsSelect.innerHTML = '<option value="">{{ _("select_category_first") }}</option>';
+                        partsSelect.disabled = true;
+                    }
+                    const btnAdd = document.getElementById('btnAddPartFromList');
+                    if (btnAdd) btnAdd.disabled = true;
                     document.getElementById('manualParts').innerHTML = '';
                     selectedPartsGlobal = {}; // Очищаем глобальный объект
 

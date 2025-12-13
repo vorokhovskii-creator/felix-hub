@@ -790,3 +790,6 @@ msgstr "!שלום, %(name)s"
 
 msgid "Неверное имя пользователя или пароль"
 msgstr "שם משתמש או סיסמה לא נכונים"
+
+msgid "part_already_added"
+msgstr "החלק כבר ברשימה"
