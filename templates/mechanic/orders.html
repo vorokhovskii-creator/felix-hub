@@ -417,8 +417,8 @@
                     <div class="add-part-box" style="margin-top:10px;">
                         <button class="btn btn-secondary" onclick="toggleAddPart({{ order.id }}, '{{ order.category }}')">+ {{ _('add_part') }}</button>
                         {% if order.status == 'новый' %}
-                        <form action="{{ url_for('mechanic_cancel_order', order_id=order.id) }}" method="POST" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('Вы уверены, что хотите отменить заказ?');">
-                            <button type="submit" class="btn" style="background-color: #fee2e2; color: #991b1b; border: 1px solid #991b1b;">Отменить заказ</button>
+                        <form action="{{ url_for('mechanic_cancel_order', order_id=order.id) }}" method="POST" style="display:inline-block; margin-left: 10px;" onsubmit="return confirm('{{ _('confirm_cancel_order') }}');">
+                            <button type="submit" class="btn" style="background-color: #fee2e2; color: #991b1b; border: 1px solid #991b1b;">{{ _('cancel_order') }}</button>
                         </form>
                         {% endif %}
                         <div id="addPartForm-{{ order.id }}" style="display:none; margin-top:8px;">

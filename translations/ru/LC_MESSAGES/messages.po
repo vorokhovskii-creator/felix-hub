@@ -793,3 +793,9 @@ msgstr "Неверное имя пользователя или пароль"
 
 msgid "part_already_added"
 msgstr "Деталь уже добавлена"
+
+msgid "cancel_order"
+msgstr "Отменить заказ"
+
+msgid "confirm_cancel_order"
+msgstr "Вы уверены, что хотите отменить заказ?"

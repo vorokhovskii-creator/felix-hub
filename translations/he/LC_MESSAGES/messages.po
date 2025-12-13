@@ -793,3 +793,9 @@ msgstr "שם משתמש או סיסמה לא נכונים"
 
 msgid "part_already_added"
 msgstr "החלק כבר ברשימה"
+
+msgid "cancel_order"
+msgstr "בטל הזמנה"
+
+msgid "confirm_cancel_order"
+msgstr "האם אתה בטוח שברצונך לבטל את ההזמנה?"

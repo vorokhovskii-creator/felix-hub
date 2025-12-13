@@ -790,3 +790,9 @@ msgstr "Welcome, %(name)s!"
 
 msgid "Неверное имя пользователя или пароль"
 msgstr "Invalid username or password"
+
+msgid "cancel_order"
+msgstr "Cancel Order"
+
+msgid "confirm_cancel_order"
+msgstr "Are you sure you want to cancel the order?"
