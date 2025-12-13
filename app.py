@@ -379,6 +379,24 @@ def notify_admin_part_added(order, part_entry):
 👨‍🔧 Механик: {order.mechanic_name}"""
     send_telegram_message(TELEGRAM_ADMIN_CHAT_ID, message)
 
+def notify_admin_order_cancelled(order):
+    """Уведомление администратору об отмене заказа"""
+    if not TELEGRAM_ADMIN_CHAT_ID:
+        return
+    
+    category_obj = Category.query.filter_by(name=order.category).first()
+    category_name = category_obj.get_name('ru') if category_obj else order.category
+    
+    message = f"""❌ <b>Заказ №{order.id} ОТМЕНЕН</b>
+
+🚗 Гос номер: <b>{order.plate_number}</b>
+📦 Категория: {category_name}
+👨‍🔧 Механик: {order.mechanic_name}
+
+⚠️ Заказ был отменен механиком."""
+    
+    send_telegram_message(TELEGRAM_ADMIN_CHAT_ID, message)
+
 def validate_plate_number(plate_number):
     """Валидация формата гос номера"""
     # Примеры допустимых форматов: 123-45-678, A123BC77, В456СТ199
@@ -578,6 +596,38 @@ def mechanic_orders():
     orders = query.order_by(Order.created_at.desc()).all()
     
     return render_template('mechanic/orders.html', orders=orders)
+
+
+@app.route('/mechanic/orders/<int:order_id>/cancel', methods=['POST'])
+@mechanic_required
+def mechanic_cancel_order(order_id):
+    """Отмена заказа механиком"""
+    order = Order.query.get_or_404(order_id)
+    
+    # Проверка прав: заказ должен принадлежать текущему механику
+    if order.mechanic_id != current_user.id:
+        flash(_l('У вас нет прав на отмену этого заказа'), 'error')
+        return redirect(url_for('mechanic_orders'))
+    
+    # Проверка статуса: отменять можно только новые заказы
+    if order.status != 'новый':
+        flash(_l('Нельзя отменить заказ, который уже в работе или выполнен'), 'error')
+        return redirect(url_for('mechanic_orders'))
+    
+    try:
+        order.status = 'отменено'
+        db.session.commit()
+        
+        # Уведомление администратору
+        notify_admin_order_cancelled(order)
+        
+        flash(_l('Заказ #%(id)s успешно отменен', id=order.id), 'success')
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Ошибка отмены заказа: {e}")
+        flash(_l('Ошибка при отмене заказа'), 'error')
+        
+    return redirect(url_for('mechanic_orders'))
 
 
 @app.route('/mechanic/orders/new')

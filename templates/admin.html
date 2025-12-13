@@ -207,7 +207,7 @@
             color: #0f5132;
         }
         
-        .status-отменён {
+        .status-отменён, .status-отменено {
             background: #f8d7da;
             color: #721c24;
         }
@@ -415,7 +415,7 @@
                         <option value="новый">{{ _('new') }}</option>
                         <option value="в работе">{{ _('in_progress') }}</option>
                         <option value="готово">{{ _('ready') }}</option>
-                        <option value="отменён">{{ _('cancelled') }}</option>
+                        <option value="отменено">{{ _('cancelled') }}</option>
                     </select>
                 </div>
                 
@@ -605,7 +605,8 @@
                                 <option value="новый" ${order.status === 'новый' ? 'selected' : ''}>Новый</option>
                                 <option value="в работе" ${order.status === 'в работе' ? 'selected' : ''}>В работе</option>
                                 <option value="готово" ${order.status === 'готово' ? 'selected' : ''}>Готово</option>
-                                <option value="отменён" ${order.status === 'отменён' ? 'selected' : ''}>Отменён</option>
+                                <option value="выдано" ${order.status === 'выдано' ? 'selected' : ''}>Выдано</option>
+                                <option value="отменено" ${order.status === 'отменено' || order.status === 'отменён' ? 'selected' : ''}>Отменено</option>
                             </select>
                         </td>
                         <td>${new Date(order.created_at).toLocaleString('ru-RU')}</td>
