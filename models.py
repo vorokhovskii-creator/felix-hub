@@ -327,10 +327,20 @@ class Order(db.Model):
                             item['added_at'] = added_at
                         selected_parts_translated.append(item)
                 else:
-                    # Старый формат без part_id
+                    # Старый формат без part_id - пробуем найти запчасть по имени
+                    name = part.get('name', '') if isinstance(part, dict) else str(part)
+                    
+                    # Пытаемся найти запчасть по имени (предполагаем, что сохранено русское имя)
+                    part_obj = Part.query.filter((Part.name_ru == name) | (Part.name == name)).first()
+                    
+                    if part_obj:
+                        part_name = part_obj.get_name(lang) if lang else name
+                    else:
+                        part_name = name
+
                     if isinstance(part, dict):
                         item = {
-                            'name': part.get('name', ''),
+                            'name': part_name,
                             'quantity': quantity
                         }
                         if added_flag is not None:
@@ -342,7 +352,12 @@ class Order(db.Model):
                         selected_parts_translated.append(part)
             else:
                 # Совсем старый формат (просто строка)
-                selected_parts_translated.append(part)
+                name = str(part)
+                part_obj = Part.query.filter((Part.name_ru == name) | (Part.name == name)).first()
+                if part_obj and lang:
+                    selected_parts_translated.append(part_obj.get_name(lang))
+                else:
+                    selected_parts_translated.append(part)
 
         # Сортировка по порядковому номеру из БД
         try:
