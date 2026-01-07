@@ -799,3 +799,15 @@ msgstr "Отменить заказ"
 
 msgid "confirm_cancel_order"
 msgstr "Вы уверены, что хотите отменить заказ?"
+
+msgid "additives"
+msgstr "Присадки"
+
+msgid "with_additives"
+msgstr "С присадками"
+
+msgid "without_additives"
+msgstr "Без присадок"
+
+msgid "no_additives"
+msgstr "БЕЗ ПРИСАДОК"
