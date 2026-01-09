@@ -339,11 +339,12 @@
                             <div>⏰ <strong>{{ _('created') }}:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
                         </div>
 
-                        {% if order.selected_parts %}
+                        {% set parts = order.selected_parts_localized if order.selected_parts_localized is defined else order.selected_parts %}
+                        {% if parts %}
                             <div class="parts-list">
                                 <h4>{{ _('order_contents') }}</h4>
                                 <ul>
-                                    {% for part in order.selected_parts %}
+                                    {% for part in parts %}
                                         {% if part is mapping %}
                                             <li>
                                                 {{ part.name }}

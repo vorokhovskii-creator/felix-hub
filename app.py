@@ -699,6 +699,43 @@ def public_orders():
         query = query.filter(Order.mechanic_name.ilike(f'%{mechanic}%'))
 
     orders = query.order_by(Order.created_at.desc()).limit(200).all()
+    lang = g.locale if hasattr(g, 'locale') and g.locale else 'ru'
+
+    part_ids = set()
+    for order in orders:
+        for part in (order.selected_parts or []):
+            if isinstance(part, dict):
+                part_id = part.get('part_id')
+                if isinstance(part_id, int):
+                    part_ids.add(part_id)
+                elif isinstance(part_id, str) and part_id.isdigit():
+                    part_ids.add(int(part_id))
+
+    parts_by_id = {}
+    if part_ids:
+        for part in Part.query.filter(Part.id.in_(part_ids)).all():
+            parts_by_id[part.id] = part.get_name(lang)
+
+    for order in orders:
+        localized_parts = []
+        for part in (order.selected_parts or []):
+            if isinstance(part, dict):
+                part_id = part.get('part_id')
+                part_id_int = None
+                if isinstance(part_id, int):
+                    part_id_int = part_id
+                elif isinstance(part_id, str) and part_id.isdigit():
+                    part_id_int = int(part_id)
+
+                localized_part = dict(part)
+                translated_name = parts_by_id.get(part_id_int) if part_id_int else None
+                if translated_name:
+                    localized_part['name'] = translated_name
+                localized_parts.append(localized_part)
+            else:
+                localized_parts.append(part)
+        setattr(order, 'selected_parts_localized', localized_parts)
+
     return render_template('orders_public.html', orders=orders)
 
 
