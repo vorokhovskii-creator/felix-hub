@@ -619,6 +619,15 @@ msgstr "טלפון"
 msgid "save_changes"
 msgstr "שמור שינויים"
 
+msgid "orders_status_board"
+msgstr "סטטוס הזמנות"
+
+msgid "auto_refresh_30s"
+msgstr "רענון אוטומטי: 30 שניות"
+
+msgid "order_contents"
+msgstr "תכולת ההזמנה"
+
 msgid "change_password"
 msgstr "שינוי סיסמה"
 

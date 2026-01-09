@@ -619,6 +619,15 @@ msgstr "Телефон"
 msgid "save_changes"
 msgstr "Сохранить изменения"
 
+msgid "orders_status_board"
+msgstr "Статус заказов"
+
+msgid "auto_refresh_30s"
+msgstr "Автообновление: 30 сек"
+
+msgid "order_contents"
+msgstr "Что в заказе"
+
 msgid "change_password"
 msgstr "Смена пароля"
 

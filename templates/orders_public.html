@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <meta name="description" content="Felix Hub - Статус заказов">
+    <meta name="description" content="Felix Hub - {{ _('orders_status_board') }}">
     <meta name="theme-color" content="#667eea">
     <meta http-equiv="refresh" content="30">
-    <title>Felix Hub - Статус заказов</title>
+    <title>Felix Hub - {{ _('orders_status_board') }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/language-switcher.css') }}">
     <style>
         * {
             margin: 0;
@@ -258,10 +259,23 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>📺 Статус заказов</h1>
+            <h1>📺 {{ _('orders_status_board') }}</h1>
             <div class="header-actions">
-                <a href="/order/create" class="btn btn-primary">+ Создать новый заказ</a>
-                <a href="{{ request.full_path }}" class="btn btn-secondary">Обновить</a>
+                <div class="language-switcher">
+                    <div class="lang-buttons">
+                        <a href="/set_language/ru?redirect={{ request.full_path }}"
+                           class="lang-btn {{ 'active' if g.locale == 'ru' else '' }}"
+                           title="Русский">🇷🇺</a>
+                        <a href="/set_language/en?redirect={{ request.full_path }}"
+                           class="lang-btn {{ 'active' if g.locale == 'en' else '' }}"
+                           title="English">🇬🇧</a>
+                        <a href="/set_language/he?redirect={{ request.full_path }}"
+                           class="lang-btn {{ 'active' if g.locale == 'he' else '' }}"
+                           title="עברית">🇮🇱</a>
+                    </div>
+                </div>
+                <a href="/order/create" class="btn btn-primary">+ {{ _('new_order') }}</a>
+                <a href="{{ request.full_path }}" class="btn btn-secondary">{{ _('refresh') }}</a>
             </div>
         </div>
     </div>
@@ -271,42 +285,42 @@
             <form method="GET" action="{{ url_for('public_orders') }}">
                 <div class="filters-grid">
                     <div class="filter-group">
-                        <label for="status">Статус</label>
+                        <label for="status">{{ _('status') }}</label>
                         <select id="status" name="status">
-                            <option value="все" {% if request.args.get('status', 'все') == 'все' %}selected{% endif %}>Все</option>
-                            <option value="новый" {% if request.args.get('status') == 'новый' %}selected{% endif %}>Новый</option>
-                            <option value="в работе" {% if request.args.get('status') == 'в работе' %}selected{% endif %}>В работе</option>
-                            <option value="готово" {% if request.args.get('status') == 'готово' %}selected{% endif %}>Готово</option>
-                            <option value="выдано" {% if request.args.get('status') == 'выдано' %}selected{% endif %}>Выдано</option>
-                            <option value="отменено" {% if request.args.get('status') == 'отменено' or request.args.get('status') == 'отменён' %}selected{% endif %}>Отменено</option>
+                            <option value="все" {% if request.args.get('status', 'все') == 'все' %}selected{% endif %}>{{ _('all') }}</option>
+                            <option value="новый" {% if request.args.get('status') == 'новый' %}selected{% endif %}>{{ _('status_new') }}</option>
+                            <option value="в работе" {% if request.args.get('status') == 'в работе' %}selected{% endif %}>{{ _('status_in_progress') }}</option>
+                            <option value="готово" {% if request.args.get('status') == 'готово' %}selected{% endif %}>{{ _('status_ready') }}</option>
+                            <option value="выдано" {% if request.args.get('status') == 'выдано' %}selected{% endif %}>{{ _('status_delivered') }}</option>
+                            <option value="отменено" {% if request.args.get('status') == 'отменено' or request.args.get('status') == 'отменён' %}selected{% endif %}>{{ _('status_cancelled') }}</option>
                         </select>
                     </div>
 
                     <div class="filter-group">
-                        <label for="plate_number">Гос номер</label>
-                        <input type="text" id="plate_number" name="plate_number" value="{{ request.args.get('plate_number', '') }}" placeholder="123-45-678">
+                        <label for="plate_number">{{ _('plate_number') }}</label>
+                        <input type="text" id="plate_number" name="plate_number" value="{{ request.args.get('plate_number', '') }}" placeholder="{{ _('search_by_plate') }}">
                     </div>
 
                     <div class="filter-group">
-                        <label for="mechanic">Механик</label>
-                        <input type="text" id="mechanic" name="mechanic" value="{{ request.args.get('mechanic', '') }}" placeholder="Имя механика">
+                        <label for="mechanic">{{ _('mechanic') }}</label>
+                        <input type="text" id="mechanic" name="mechanic" value="{{ request.args.get('mechanic', '') }}" placeholder="{{ _('mechanic_name') }}">
                     </div>
 
                     <div class="filter-group">
-                        <label for="order_id">Заказ №</label>
-                        <input type="text" id="order_id" name="order_id" value="{{ request.args.get('order_id', '') }}" placeholder="ID заказа">
+                        <label for="order_id">{{ _('order') }} #</label>
+                        <input type="text" id="order_id" name="order_id" value="{{ request.args.get('order_id', '') }}" placeholder="{{ _('order_id') }}">
                     </div>
 
                     <div class="filter-group">
-                        <button type="submit" class="btn btn-apply">Показать</button>
+                        <button type="submit" class="btn btn-apply">{{ _('apply') }}</button>
                     </div>
                 </div>
             </form>
         </div>
 
         <div class="summary">
-            <div>Найдено: {{ orders|length }}</div>
-            <div>Автообновление: 30 сек</div>
+            <div>{{ _('found') }}: {{ orders|length }}</div>
+            <div>{{ _('auto_refresh_30s') }}</div>
         </div>
 
         {% if orders %}
@@ -314,20 +328,20 @@
                 {% for order in orders %}
                     <div class="order-card">
                         <div class="order-top">
-                            <div class="order-id">Заказ №{{ order.id }}</div>
+                            <div class="order-id">{{ _('order') }} №{{ order.id }}</div>
                             <span class="status-badge status-{{ order.status|replace(' ', '-') }}">{{ get_status_translation(order.status) }}</span>
                         </div>
 
                         <div class="order-details">
-                            <div>🔧 <strong>Механик:</strong> {{ order.mechanic_name }}</div>
-                            <div>🚗 <strong>Гос номер:</strong> {{ order.plate_number }}</div>
-                            <div>📦 <strong>Категория:</strong> {{ get_category_name(order.category) }}</div>
-                            <div>⏰ <strong>Создан:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                            <div>🔧 <strong>{{ _('mechanic') }}:</strong> {{ order.mechanic_name }}</div>
+                            <div>🚗 <strong>{{ _('plate_number') }}:</strong> {{ order.plate_number }}</div>
+                            <div>📦 <strong>{{ _('category') }}:</strong> {{ get_category_name(order.category) }}</div>
+                            <div>⏰ <strong>{{ _('created') }}:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
                         </div>
 
                         {% if order.selected_parts %}
                             <div class="parts-list">
-                                <h4>Что в заказе</h4>
+                                <h4>{{ _('order_contents') }}</h4>
                                 <ul>
                                     {% for part in order.selected_parts %}
                                         {% if part is mapping %}
@@ -347,16 +361,15 @@
 
                         {% if order.comment %}
                             <div class="comment-box">
-                                <strong>Комментарий:</strong> {{ order.comment }}
+                                <strong>{{ _('comment') }}:</strong> {{ order.comment }}
                             </div>
                         {% endif %}
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <div class="empty">Нет заказов по выбранным фильтрам</div>
+            <div class="empty">{{ _('no_orders_found') }}</div>
         {% endif %}
     </div>
 </body>
 </html>
-

@@ -619,6 +619,15 @@ msgstr "Phone"
 msgid "save_changes"
 msgstr "Save Changes"
 
+msgid "orders_status_board"
+msgstr "Orders Status"
+
+msgid "auto_refresh_30s"
+msgstr "Auto-refresh: 30 sec"
+
+msgid "order_contents"
+msgstr "Order Contents"
+
 msgid "change_password"
 msgstr "Change Password"
 
