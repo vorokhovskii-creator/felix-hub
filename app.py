@@ -436,10 +436,17 @@ def sort_selected_parts_by_sort_order(parts, category, cache=None):
         return []
 
     cache = cache if cache is not None else {}
-    mapping = cache.get(category)
+    category_obj = Category.query.filter(
+        (Category.name == category) |
+        (Category.name_ru == category) |
+        (Category.name_en == category) |
+        (Category.name_he == category)
+    ).first()
+    raw_category = category_obj.name if category_obj else category
+    mapping = cache.get(raw_category)
 
     if mapping is None:
-        parts_in_category = Part.query.filter_by(category=category).all()
+        parts_in_category = Part.query.filter_by(category=raw_category).all()
         id_to_order = {p.id: (p.sort_order if p.sort_order is not None else 0) for p in parts_in_category}
         name_to_order = {}
         for p in parts_in_category:
@@ -449,7 +456,7 @@ def sort_selected_parts_by_sort_order(parts, category, cache=None):
                     name_to_order[nm] = order_val
         max_order = max([o for o in id_to_order.values()] + [0])
         mapping = (id_to_order, name_to_order, max_order)
-        cache[category] = mapping
+        cache[raw_category] = mapping
 
     id_to_order, name_to_order, max_order = mapping
 

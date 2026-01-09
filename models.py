@@ -284,12 +284,16 @@ class Order(db.Model):
     def to_dict(self, include_mechanic=False, lang=None):
         """Преобразовать в словарь для API"""
         category_name = self.category
-        
-        # Если указан язык, пытаемся найти перевод категории
-        if lang:
-            category_obj = Category.query.filter_by(name=self.category).first()
-            if category_obj:
-                category_name = category_obj.get_name(lang)
+        category_obj = Category.query.filter(
+            (Category.name == self.category) |
+            (Category.name_ru == self.category) |
+            (Category.name_en == self.category) |
+            (Category.name_he == self.category)
+        ).first()
+        category_raw = category_obj.name if category_obj else self.category
+
+        if lang and category_obj:
+            category_name = category_obj.get_name(lang)
         
         # Обработка selected_parts с переводом
         selected_parts_translated = []
@@ -346,7 +350,7 @@ class Order(db.Model):
 
         # Сортировка по порядковому номеру из БД
         try:
-            parts_in_category = Part.query.filter_by(category=self.category).all()
+            parts_in_category = Part.query.filter_by(category=category_raw).all()
             id_to_order = {p.id: (p.sort_order if p.sort_order is not None else 0) for p in parts_in_category}
             name_to_order = {}
             for p in parts_in_category:
@@ -358,6 +362,8 @@ class Order(db.Model):
                 if isinstance(item, dict):
                     pid = item.get('part_id')
                     nm = item.get('name')
+                    if isinstance(pid, str) and pid.isdigit():
+                        pid = int(pid)
                     if pid in id_to_order:
                         return (id_to_order[pid], idx)
                     if nm in name_to_order:
@@ -376,6 +382,7 @@ class Order(db.Model):
             'mechanic_name': self.mechanic_name,
             'telegram_id': self.telegram_id,
             'category': category_name,
+            'category_raw': category_raw,
             'plate_number': self.plate_number,
             'selected_parts': selected_parts_translated,
             'is_original': self.is_original,
