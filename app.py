@@ -677,6 +677,31 @@ def public_create_order():
     return render_template('create_order.html', mechanics=mechanics)
 
 
+@app.route('/orders')
+def public_orders():
+    status = request.args.get('status', 'все')
+    plate_number = request.args.get('plate_number', '').strip()
+    mechanic = request.args.get('mechanic', '').strip()
+    order_id = request.args.get('order_id', '').strip()
+
+    query = Order.query
+
+    if order_id.isdigit():
+        query = query.filter(Order.id == int(order_id))
+
+    if status and status != 'все':
+        query = query.filter_by(status=status)
+
+    if plate_number:
+        query = query.filter(Order.plate_number.ilike(f'%{plate_number}%'))
+
+    if mechanic:
+        query = query.filter(Order.mechanic_name.ilike(f'%{mechanic}%'))
+
+    orders = query.order_by(Order.created_at.desc()).limit(200).all()
+    return render_template('orders_public.html', orders=orders)
+
+
 @app.route('/api/submit_order', methods=['POST'])
 def submit_order():
     """API для создания нового заказа"""
