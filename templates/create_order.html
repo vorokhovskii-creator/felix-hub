@@ -864,27 +864,12 @@
                         </div>
                     `;
                     
-                    // Очистка формы и глобального объекта
-                    document.getElementById('orderForm').reset();
-                    document.getElementById('partsList').innerHTML = '<p style="color: #999; font-size: 14px;">{{ _("select_category_first") }}</p>';
-                    document.getElementById('manualParts').innerHTML = '';
-                    selectedPartsGlobal = {}; // Очищаем глобальный объект
-
-                    currentAdditivesMode = null;
-                    document.querySelectorAll('input[name="additives_mode"]').forEach(i => {
-                        i.checked = false;
-                    });
-                    const additivesGroup = document.getElementById('additives-group');
-                    syncRadioGroupActive(additivesGroup);
-                    toggleAdditives(null);
-
-                    // Оставляем на странице (для следующего заказа), но скроллим вверх
                     window.scrollTo(0, 0);
-                    
-                    // Убираем сообщение через 5 секунд
+
+                    const redirectUrl = `/orders?order_id=${encodeURIComponent(result.order_id)}`;
                     setTimeout(() => {
-                        alertContainer.innerHTML = '';
-                    }, 5000);
+                        window.location.assign(redirectUrl);
+                    }, 1200);
                 } else {
                     alertContainer.innerHTML = `
                         <div class="alert alert-error">
