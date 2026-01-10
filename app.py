@@ -4,6 +4,7 @@ import shutil
 import socket
 import subprocess
 import textwrap
+from urllib.parse import urlencode
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, g
@@ -893,6 +894,11 @@ def public_orders():
     if page_size not in allowed_page_sizes:
         page_size = 25
 
+    base_args = request.args.to_dict(flat=True)
+    base_args.pop('page', None)
+    base_args['page_size'] = str(page_size)
+    base_query = urlencode(base_args)
+
     query = Order.query
 
     if order_id.isdigit():
@@ -984,7 +990,8 @@ def public_orders():
         total_orders=total_orders,
         page=page,
         page_size=page_size,
-        total_pages=total_pages
+        total_pages=total_pages,
+        base_query=base_query
     )
 
 

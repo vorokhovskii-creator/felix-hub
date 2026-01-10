@@ -504,7 +504,10 @@
                 </div>
 
                 {% if total_pages > 1 %}
-                    {% set args = request.args.to_dict() %}
+                    {% set qs = base_query %}
+                    {% if qs %}
+                        {% set qs = qs ~ '&' %}
+                    {% endif %}
                     {% set window_size = 2 %}
                     {% set start = [1, page - window_size] | max %}
                     {% set end = [total_pages, page + window_size] | min %}
@@ -518,10 +521,10 @@
                     <div class="pagination">
                         <div class="page-buttons">
                             <a class="page-btn {% if page == 1 %}disabled{% endif %}"
-                               href="{{ url_for('public_orders', **args, page=page-1, page_size=page_size) }}">←</a>
+                               href="{{ url_for('public_orders') }}?{{ qs }}page={{ page - 1 }}">←</a>
 
                             {% if start > 1 %}
-                                <a class="page-btn" href="{{ url_for('public_orders', **args, page=1, page_size=page_size) }}">1</a>
+                                <a class="page-btn" href="{{ url_for('public_orders') }}?{{ qs }}page=1">1</a>
                                 {% if start > 2 %}
                                     <span class="page-info">…</span>
                                 {% endif %}
@@ -529,18 +532,18 @@
 
                             {% for p in range(start, end + 1) %}
                                 <a class="page-btn {% if p == page %}active{% endif %}"
-                                   href="{{ url_for('public_orders', **args, page=p, page_size=page_size) }}">{{ p }}</a>
+                                   href="{{ url_for('public_orders') }}?{{ qs }}page={{ p }}">{{ p }}</a>
                             {% endfor %}
 
                             {% if end < total_pages %}
                                 {% if end < total_pages - 1 %}
                                     <span class="page-info">…</span>
                                 {% endif %}
-                                <a class="page-btn" href="{{ url_for('public_orders', **args, page=total_pages, page_size=page_size) }}">{{ total_pages }}</a>
+                                <a class="page-btn" href="{{ url_for('public_orders') }}?{{ qs }}page={{ total_pages }}">{{ total_pages }}</a>
                             {% endif %}
 
                             <a class="page-btn {% if page == total_pages %}disabled{% endif %}"
-                               href="{{ url_for('public_orders', **args, page=page+1, page_size=page_size) }}">→</a>
+                               href="{{ url_for('public_orders') }}?{{ qs }}page={{ page + 1 }}">→</a>
                         </div>
                         <div class="page-info">Стр. {{ page }} / {{ total_pages }}</div>
                     </div>
