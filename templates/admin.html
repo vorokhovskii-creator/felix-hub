@@ -157,6 +157,87 @@
             color: #333;
             font-size: 1.5em;
         }
+
+        .table-toolbar {
+            padding: 12px 25px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .table-toolbar .page-size {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .table-toolbar select {
+            padding: 8px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        .table-toolbar select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .pagination {
+            padding: 12px 25px;
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .page-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 6px 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            color: #333;
+            transition: all 0.15s ease;
+        }
+
+        .page-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .page-btn[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-btn.active {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .page-info {
+            color: #666;
+            font-weight: 700;
+        }
         
         table {
             width: 100%;
@@ -441,6 +522,21 @@
             <div class="table-header">
                 <h2>📋 {{ _('orders_list') }}</h2>
             </div>
+
+            <div class="table-toolbar">
+                <div class="page-info" id="ordersSummary"></div>
+                <div class="page-size">
+                    <span>На странице:</span>
+                    <select id="pageSizeSelect">
+                        <option value="15">15</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="paginationControls" class="pagination" style="display:none;"></div>
             
             <div id="tableContent" class="table-wrapper">
                 <div class="loading">⏳ Загрузка данных...</div>
@@ -450,7 +546,111 @@
     
     <script>
         let orders = [];
+        let pageSize = 25;
+        let currentPage = 1;
         let partsIndexByCategory = {};
+
+        function loadSavedPageSize() {
+            try {
+                const raw = localStorage.getItem('adminOrdersPageSize');
+                const n = parseInt(raw, 10);
+                if ([15, 25, 50, 100].includes(n)) return n;
+            } catch (_) {
+            }
+            return 25;
+        }
+
+        function setPageSize(newSize) {
+            if (![15, 25, 50, 100].includes(newSize)) return;
+            pageSize = newSize;
+            currentPage = 1;
+            try {
+                localStorage.setItem('adminOrdersPageSize', String(newSize));
+            } catch (_) {
+            }
+            renderOrders();
+        }
+
+        function totalPages() {
+            return Math.max(1, Math.ceil(orders.length / pageSize));
+        }
+
+        function clampCurrentPage() {
+            const tp = totalPages();
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > tp) currentPage = tp;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            clampCurrentPage();
+            renderOrders();
+        }
+
+        function renderPaginationControls() {
+            const controls = document.getElementById('paginationControls');
+            const summary = document.getElementById('ordersSummary');
+            if (!controls || !summary) return;
+
+            if (orders.length === 0) {
+                controls.style.display = 'none';
+                summary.textContent = '';
+                return;
+            }
+
+            clampCurrentPage();
+
+            const total = orders.length;
+            const tp = totalPages();
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, total);
+            summary.textContent = `Показано ${startIdx + 1}-${endIdx} из ${total}`;
+
+            if (tp <= 1) {
+                controls.style.display = 'none';
+                controls.innerHTML = '';
+                return;
+            }
+
+            controls.style.display = 'flex';
+
+            const windowSize = 2;
+            let start = Math.max(1, currentPage - windowSize);
+            let end = Math.min(tp, currentPage + windowSize);
+            if (currentPage <= 1 + windowSize) end = Math.min(tp, 1 + windowSize * 2 + 1);
+            if (currentPage >= tp - windowSize) start = Math.max(1, tp - windowSize * 2 - 1);
+
+            const pageBtns = [];
+            const pushPage = (p) => {
+                pageBtns.push(
+                    `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goToPage(${p})">${p}</button>`
+                );
+            };
+
+            const pushEllipsis = () => pageBtns.push(`<span class="page-info">…</span>`);
+
+            if (start > 1) {
+                pushPage(1);
+                if (start > 2) pushEllipsis();
+            }
+
+            for (let p = start; p <= end; p++) pushPage(p);
+
+            if (end < tp) {
+                if (end < tp - 1) pushEllipsis();
+                pushPage(tp);
+            }
+
+            controls.innerHTML = `
+                <div class="page-buttons">
+                    <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">←</button>
+                    ${pageBtns.join('')}
+                    <button class="page-btn" ${currentPage === tp ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">→</button>
+                </div>
+                <div class="page-info">Стр. ${currentPage} / ${tp}</div>
+            `;
+        }
+
         async function preloadPartsIndex() {
             try {
                 const resp = await fetch('/api/parts/catalog?active_only=true&lang={{ g.locale if g.locale else "ru" }}');
@@ -496,12 +696,21 @@
         
         // Загрузка заказов при старте
         window.addEventListener('DOMContentLoaded', () => {
+            pageSize = loadSavedPageSize();
+            const pageSizeSelect = document.getElementById('pageSizeSelect');
+            if (pageSizeSelect) {
+                pageSizeSelect.value = String(pageSize);
+                pageSizeSelect.addEventListener('change', () => {
+                    const newSize = parseInt(pageSizeSelect.value, 10);
+                    setPageSize(newSize);
+                });
+            }
             preloadPartsIndex().finally(() => {
                 loadOrders();
                 setInterval(loadOrders, 30000);
-                document.getElementById('filterStatus').addEventListener('change', loadOrders);
-                document.getElementById('filterPlate').addEventListener('input', debounce(loadOrders, 500));
-                document.getElementById('filterMechanic').addEventListener('input', debounce(loadOrders, 500));
+                document.getElementById('filterStatus').addEventListener('change', () => { currentPage = 1; loadOrders(); });
+                document.getElementById('filterPlate').addEventListener('input', debounce(() => { currentPage = 1; loadOrders(); }, 500));
+                document.getElementById('filterMechanic').addEventListener('input', debounce(() => { currentPage = 1; loadOrders(); }, 500));
             });
         });
         
@@ -534,6 +743,7 @@
             const content = document.getElementById('tableContent');
             
             if (orders.length === 0) {
+                renderPaginationControls();
                 content.innerHTML = `
                     <div class="empty-state">
                         <p style="font-size: 3em;">📦</p>
@@ -542,6 +752,10 @@
                 `;
                 return;
             }
+
+            clampCurrentPage();
+            const startIdx = (currentPage - 1) * pageSize;
+            const pageOrders = orders.slice(startIdx, startIdx + pageSize);
             
             let html = `
                 <table>
@@ -561,7 +775,7 @@
                     <tbody>
             `;
             
-            orders.forEach(order => {
+            pageOrders.forEach(order => {
                 const map = partsIndexByCategory[order.category];
                 const selectedParts = Array.isArray(order.selected_parts) ? [...order.selected_parts] : [];
                 if (map) selectedParts.sort((a, b) => partOrderIndex(a, map) - partOrderIndex(b, map));
@@ -626,6 +840,7 @@
             
             html += '</tbody></table>';
             content.innerHTML = html;
+            renderPaginationControls();
         }
         
         // Обновление статистики
