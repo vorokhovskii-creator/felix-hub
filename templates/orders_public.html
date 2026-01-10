@@ -45,6 +45,19 @@
             font-weight: 800;
         }
 
+        .header-titles {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .header-subtitle {
+            font-weight: 700;
+            opacity: 0.95;
+            font-size: 0.92em;
+            margin-top: 2px;
+        }
+
         .header-actions {
             display: flex;
             gap: 10px;
@@ -259,7 +272,10 @@
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>📺 <span dir="ltr">Felix Hub</span> — {{ _('orders_status_board') }}</h1>
+            <div class="header-titles">
+                <h1>📺 <span dir="ltr">Felix Hub</span></h1>
+                <div class="header-subtitle">{{ _('orders_status_board') }}</div>
+            </div>
             <div class="header-actions">
                 <div class="language-switcher">
                     <div class="lang-buttons">
