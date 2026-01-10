@@ -784,6 +784,17 @@ def public_orders():
         localized_parts = []
         for part in (order.selected_parts or []):
             if isinstance(part, dict):
+                part_name = (part.get('name') or '').strip()
+                is_no_additives_label = (
+                    bool(part.get('is_label')) and not part.get('part_id')
+                ) or (part_name.upper() in {'БЕЗ ПРИСАДОК', 'БЕЗ ДОБАВОК'}) or (part_name.lower() in {'без присадок', 'без добавок'})
+
+                if is_no_additives_label:
+                    localized_part = dict(part)
+                    localized_part['name'] = gettext('no_additives')
+                    localized_parts.append(localized_part)
+                    continue
+
                 part_id = part.get('part_id')
                 part_id_int = None
                 if isinstance(part_id, int):
@@ -797,7 +808,11 @@ def public_orders():
                     localized_part['name'] = translated_name
                 localized_parts.append(localized_part)
             else:
-                localized_parts.append(part)
+                part_text = (part or '').strip() if isinstance(part, str) else part
+                if isinstance(part_text, str) and (part_text.upper() in {'БЕЗ ПРИСАДОК', 'БЕЗ ДОБАВОК'} or part_text.lower() in {'без присадок', 'без добавок'}):
+                    localized_parts.append(gettext('no_additives'))
+                else:
+                    localized_parts.append(part)
         setattr(order, 'selected_parts_localized', sort_selected_parts_by_sort_order(localized_parts, order.category, cache=sort_cache))
 
     return render_template('orders_public.html', orders=orders)
