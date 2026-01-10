@@ -159,7 +159,7 @@
         }
 
         .table-toolbar {
-            padding: 12px 25px;
+            padding: 8px 18px;
             background: white;
             border-bottom: 1px solid #f0f0f0;
             display: flex;
@@ -167,6 +167,7 @@
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
+            font-size: 12px;
         }
 
         .table-toolbar .page-size {
@@ -178,10 +179,10 @@
         }
 
         .table-toolbar select {
-            padding: 8px 10px;
+            padding: 6px 8px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 0.95em;
+            font-size: 12px;
             transition: all 0.3s ease;
         }
 
@@ -191,14 +192,15 @@
         }
 
         .pagination {
-            padding: 12px 25px;
+            padding: 8px 18px;
             background: white;
-            border-bottom: 2px solid #e0e0e0;
+            border-top: 1px solid #f0f0f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 12px;
             flex-wrap: wrap;
+            font-size: 12px;
         }
 
         .page-buttons {
@@ -209,7 +211,7 @@
         }
 
         .page-btn {
-            padding: 6px 10px;
+            padding: 4px 8px;
             border: 2px solid #e0e0e0;
             background: white;
             border-radius: 8px;
@@ -217,6 +219,7 @@
             font-weight: 700;
             color: #333;
             transition: all 0.15s ease;
+            font-size: 12px;
         }
 
         .page-btn:hover {
@@ -237,6 +240,7 @@
         .page-info {
             color: #666;
             font-weight: 700;
+            font-size: 12px;
         }
         
         table {
@@ -522,6 +526,10 @@
             <div class="table-header">
                 <h2>📋 {{ _('orders_list') }}</h2>
             </div>
+            
+            <div id="tableContent" class="table-wrapper">
+                <div class="loading">⏳ Загрузка данных...</div>
+            </div>
 
             <div class="table-toolbar">
                 <div class="page-info" id="ordersSummary"></div>
@@ -537,10 +545,6 @@
             </div>
 
             <div id="paginationControls" class="pagination" style="display:none;"></div>
-            
-            <div id="tableContent" class="table-wrapper">
-                <div class="loading">⏳ Загрузка данных...</div>
-            </div>
         </div>
     </div>
     
