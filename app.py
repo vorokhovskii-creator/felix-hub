@@ -337,6 +337,8 @@ def notify_admin_new_order(order):
                 name = part_obj.get_name('ru') if part_obj else part.get('name', '')
             else:
                 name = part.get('name', '')
+                if isinstance(name, str) and (name.strip() == 'no_additives' or name.strip().casefold() in {'без присадок', 'без добавок', 'no additives', 'ללא תוספים'}):
+                    name = 'БЕЗ ПРИСАДОК'
             
             if quantity > 1:
                 parts_list.append(f"• {name} <b>(x{quantity})</b>")
@@ -344,7 +346,10 @@ def notify_admin_new_order(order):
                 parts_list.append(f"• {name}")
         else:
             # Старый формат (просто строка)
-            parts_list.append(f"• {part}")
+            if isinstance(part, str) and (part.strip() == 'no_additives' or part.strip().casefold() in {'без присадок', 'без добавок', 'no additives', 'ללא תוספים'}):
+                parts_list.append("• БЕЗ ПРИСАДОК")
+            else:
+                parts_list.append(f"• {part}")
     
     parts_text = '\n'.join(parts_list)
     
@@ -523,6 +528,8 @@ def print_receipt(order):
                 name = part_obj.get_name('ru') if part_obj else part.get('name', '')
             else:
                 name = part.get('name', '')
+                if isinstance(name, str) and (name.strip() == 'no_additives' or name.strip().casefold() in {'без присадок', 'без добавок', 'no additives', 'ללא תוספים'}):
+                    name = 'БЕЗ ПРИСАДОК'
             
             if quantity > 1:
                 receipt += f"- {name} (x{quantity})\n"
@@ -530,7 +537,10 @@ def print_receipt(order):
                 receipt += f"- {name}\n"
         else:
             # Старый формат (просто строка)
-            receipt += f"- {part}\n"
+            if isinstance(part, str) and (part.strip() == 'no_additives' or part.strip().casefold() in {'без присадок', 'без добавок', 'no additives', 'ללא תוספים'}):
+                receipt += "- БЕЗ ПРИСАДОК\n"
+            else:
+                receipt += f"- {part}\n"
     
     receipt += f"""{'='*40}
 Статус: {order.status}
@@ -673,9 +683,68 @@ def mechanic_orders():
         query = query.filter(Order.plate_number.ilike(f'%{plate_number}%'))
     
     orders = query.order_by(Order.created_at.desc()).all()
+    lang = g.locale if hasattr(g, 'locale') and g.locale else 'ru'
     sort_cache = {}
+    no_additives_aliases_cf = {
+        'no_additives',
+        'без присадок',
+        'без добавок',
+        'no additives',
+        'ללא תוספים',
+    }
+
+    part_ids = set()
+    for order in orders:
+        for part in (order.selected_parts or []):
+            if isinstance(part, dict):
+                part_id = part.get('part_id')
+                if isinstance(part_id, int):
+                    part_ids.add(part_id)
+                elif isinstance(part_id, str) and part_id.isdigit():
+                    part_ids.add(int(part_id))
+
+    parts_by_id = {}
+    if part_ids:
+        for part in Part.query.filter(Part.id.in_(part_ids)).all():
+            parts_by_id[part.id] = part.get_name(lang)
+
     for order in orders:
         setattr(order, 'selected_parts_sorted', sort_selected_parts_by_sort_order(order.selected_parts or [], order.category, cache=sort_cache))
+
+        localized_parts = []
+        for part in (order.selected_parts or []):
+            if isinstance(part, dict):
+                part_name = (part.get('name') or '').strip()
+                is_no_additives_label = (
+                    bool(part.get('is_label')) and not part.get('part_id')
+                ) or (part_name == 'no_additives') or (part_name.casefold() in no_additives_aliases_cf)
+
+                if is_no_additives_label:
+                    localized_part = dict(part)
+                    localized_part['name'] = gettext('no_additives')
+                    localized_parts.append(localized_part)
+                    continue
+
+                part_id = part.get('part_id')
+                part_id_int = None
+                if isinstance(part_id, int):
+                    part_id_int = part_id
+                elif isinstance(part_id, str) and part_id.isdigit():
+                    part_id_int = int(part_id)
+
+                localized_part = dict(part)
+                translated_name = parts_by_id.get(part_id_int) if part_id_int else None
+                if translated_name:
+                    localized_part['name'] = translated_name
+                localized_parts.append(localized_part)
+            else:
+                part_text = (part or '').strip() if isinstance(part, str) else part
+                if isinstance(part_text, str) and (part_text == 'no_additives' or part_text.casefold() in no_additives_aliases_cf):
+                    localized_parts.append(gettext('no_additives'))
+                else:
+                    localized_parts.append(part)
+
+        setattr(order, 'selected_parts_localized', sort_selected_parts_by_sort_order(localized_parts, order.category, cache=sort_cache))
 
     return render_template('mechanic/orders.html', orders=orders)
 
@@ -764,6 +833,13 @@ def public_orders():
     orders = query.order_by(Order.created_at.desc()).limit(200).all()
     lang = g.locale if hasattr(g, 'locale') and g.locale else 'ru'
     sort_cache = {}
+    no_additives_aliases_cf = {
+        'no_additives',
+        'без присадок',
+        'без добавок',
+        'no additives',
+        'ללא תוספים',
+    }
 
     part_ids = set()
     for order in orders:
@@ -787,9 +863,9 @@ def public_orders():
                 part_name = (part.get('name') or '').strip()
                 is_no_additives_label = (
                     bool(part.get('is_label')) and not part.get('part_id')
-                ) or (part_name.upper() in {'БЕЗ ПРИСАДОК', 'БЕЗ ДОБАВОК'}) or (part_name.lower() in {'без присадок', 'без добавок'})
+                ) or (part_name.casefold() in no_additives_aliases_cf)
 
-                if is_no_additives_label:
+                if is_no_additives_label or part_name == 'no_additives':
                     localized_part = dict(part)
                     localized_part['name'] = gettext('no_additives')
                     localized_parts.append(localized_part)
@@ -809,7 +885,7 @@ def public_orders():
                 localized_parts.append(localized_part)
             else:
                 part_text = (part or '').strip() if isinstance(part, str) else part
-                if isinstance(part_text, str) and (part_text.upper() in {'БЕЗ ПРИСАДОК', 'БЕЗ ДОБАВОК'} or part_text.lower() in {'без присадок', 'без добавок'}):
+                if isinstance(part_text, str) and (part_text == 'no_additives' or part_text.casefold() in no_additives_aliases_cf):
                     localized_parts.append(gettext('no_additives'))
                 else:
                     localized_parts.append(part)
@@ -868,16 +944,42 @@ def submit_order():
         # Поддерживаем как старый формат (массив строк), так и новый (массив объектов с количеством и part_id)
         selected_parts = data['selected_parts']
         normalized_parts = []
+        no_additives_aliases_cf = {
+            'no_additives',
+            'без присадок',
+            'без добавок',
+            'no additives',
+            'ללא תוספים',
+        }
         
         for part in selected_parts:
             if isinstance(part, str):
                 # Старый формат: просто строка (для обратной совместимости)
-                normalized_parts.append({
-                    'name': part,
-                    'quantity': 1
-                })
+                part_name = part.strip()
+                if part_name == 'no_additives' or part_name.casefold() in no_additives_aliases_cf:
+                    normalized_parts.append({
+                        'name': 'no_additives',
+                        'quantity': 1,
+                        'is_label': True
+                    })
+                else:
+                    normalized_parts.append({
+                        'name': part,
+                        'quantity': 1
+                    })
             elif isinstance(part, dict):
                 # Новый формат: объект с name, quantity и опционально part_id
+                part_name = (part.get('name', '') or '').strip()
+                part_id = part.get('part_id')
+                is_label = bool(part.get('is_label')) or (not part_id and (part_name == 'no_additives' or part_name.casefold() in no_additives_aliases_cf))
+                if is_label:
+                    normalized_parts.append({
+                        'name': 'no_additives',
+                        'quantity': int(part.get('quantity', 1)),
+                        'is_label': True
+                    })
+                    continue
+
                 part_entry = {
                     'name': part.get('name', ''),
                     'quantity': int(part.get('quantity', 1))

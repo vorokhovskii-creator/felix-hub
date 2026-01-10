@@ -394,7 +394,7 @@
                         </div>
                     </div>
 
-                    {% set parts = order.selected_parts_sorted if order.selected_parts_sorted is defined else order.selected_parts %}
+                    {% set parts = order.selected_parts_localized if order.selected_parts_localized is defined else (order.selected_parts_sorted if order.selected_parts_sorted is defined else order.selected_parts) %}
                     {% if parts %}
                     <div class="parts-list">
                         <h4>{{ _('parts') }}:</h4>
