@@ -676,9 +676,9 @@
 
             const safe = String(receiptText ?? '');
             const escaped = safe
-                .replaceAll('&', '&amp;')
-                .replaceAll('<', '&lt;')
-                .replaceAll('>', '&gt;');
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
 
             w.document.open();
             w.document.write(`<!doctype html>
@@ -694,7 +694,7 @@
   </style>
 </head>
 <body>
-  <pre>${escaped}</pre>
+  <pre>${escaped || 'Чек пустой'}</pre>
 </body>
 </html>`);
             w.document.close();
