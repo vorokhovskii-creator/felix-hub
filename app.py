@@ -1,5 +1,9 @@
 import os
 import re
+import shutil
+import socket
+import subprocess
+import textwrap
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, g
@@ -496,59 +500,113 @@ def sort_selected_parts_by_sort_order(parts, category, cache=None):
 
     return [x for _, x in sorted([(sort_key(it, i), it) for i, it in enumerate(parts)], key=lambda t: t[0])]
 
+def _send_to_thermal_printer(text):
+    backend = (os.getenv('THERMAL_PRINT_BACKEND', 'stdout') or 'stdout').strip().lower()
+    encoding = (os.getenv('THERMAL_PRINTER_ENCODING', 'utf-8') or 'utf-8').strip()
+    payload = (text or '').encode(encoding, errors='replace')
+
+    if backend in {'stdout', 'console'}:
+        print(text)
+        return
+
+    if backend == 'cups':
+        lp_path = shutil.which('lp')
+        if not lp_path:
+            raise RuntimeError('THERMAL_PRINT_BACKEND=cups, но lp не найден')
+
+        printer_name = (os.getenv('THERMAL_PRINTER_NAME') or '').strip()
+        cmd = [lp_path]
+        if printer_name:
+            cmd += ['-d', printer_name]
+        cmd += ['-o', 'raw']
+
+        proc = subprocess.run(cmd, input=payload, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if proc.returncode != 0:
+            err = proc.stderr.decode('utf-8', errors='replace').strip() or 'unknown error'
+            raise RuntimeError(f'Ошибка печати (cups): {err}')
+        return
+
+    if backend == 'tcp':
+        host = (os.getenv('THERMAL_PRINTER_HOST') or '').strip()
+        port_raw = (os.getenv('THERMAL_PRINTER_PORT') or '9100').strip()
+        port = int(port_raw) if port_raw.isdigit() else 9100
+        if not host:
+            raise RuntimeError('THERMAL_PRINT_BACKEND=tcp, но THERMAL_PRINTER_HOST не задан')
+
+        with socket.create_connection((host, port), timeout=10) as sock:
+            sock.sendall(payload)
+        return
+
+    raise RuntimeError(f'Неизвестный THERMAL_PRINT_BACKEND={backend}')
+
 def print_receipt(order):
     """Печать чека (симуляция - можно заменить на реальную печать)"""
-    # Получаем переведенное название категории на русском
     category_name = order.category
     category_obj = Category.query.filter_by(name=order.category).first()
     if category_obj:
         category_name = category_obj.get_name('ru')
-    
-    receipt = f"""
-{'='*40}
-СТО Felix
-{'='*40}
-Заказ №{order.id}
-Механик: {order.mechanic_name}
-Гос номер: {order.plate_number}
-Категория: {category_name}
-{'='*40}
-Детали:
-"""
-    # Выводим детали на русском языке
+
+    width_raw = os.getenv('THERMAL_PRINTER_LINE_WIDTH', '').strip()
+    width = int(width_raw) if width_raw.isdigit() and int(width_raw) > 0 else 40
+    sep = '=' * width
+
+    lines = [
+        sep,
+        'СТО Felix',
+        sep,
+        f'Заказ №{order.id}',
+        f'Механик: {order.mechanic_name}',
+        f'Гос номер: {order.plate_number}',
+        f'Категория: {category_name}',
+        f"Тип: {'Оригинал' if order.is_original else 'Аналог'}",
+        f'Создан: {_format_dt(order.created_at)}',
+        sep,
+        'Состав заказа:',
+    ]
+
+    no_additives_aliases_cf = {
+        'no_additives',
+        'без присадок',
+        'без добавок',
+        'no additives',
+        'ללא תוספים',
+    }
+
     for part in sort_selected_parts_by_sort_order(order.selected_parts or [], order.category):
         if isinstance(part, dict):
-            # Новый формат с количеством и опционально part_id
             part_id = part.get('part_id')
             quantity = part.get('quantity', 1)
-            
-            # Если есть part_id, получаем название на русском
+
             if part_id:
                 part_obj = Part.query.get(part_id)
-                name = part_obj.get_name('ru') if part_obj else part.get('name', '')
+                name = part_obj.get_name('ru') if part_obj else (part.get('name', '') or '')
             else:
-                name = part.get('name', '')
-                if isinstance(name, str) and (name.strip() == 'no_additives' or name.strip().casefold() in {'без присадок', 'без добавок', 'no additives', 'ללא תוספים'}):
+                name = (part.get('name', '') or '')
+                if isinstance(name, str) and (name.strip() == 'no_additives' or name.strip().casefold() in no_additives_aliases_cf):
                     name = 'БЕЗ ПРИСАДОК'
-            
-            if quantity > 1:
-                receipt += f"- {name} (x{quantity})\n"
-            else:
-                receipt += f"- {name}\n"
+
+            qty_suffix = f' (x{quantity})' if isinstance(quantity, int) and quantity > 1 else ''
+            lines.append(f'- {name}{qty_suffix}'.strip())
         else:
-            # Старый формат (просто строка)
-            if isinstance(part, str) and (part.strip() == 'no_additives' or part.strip().casefold() in {'без присадок', 'без добавок', 'no additives', 'ללא תוספים'}):
-                receipt += "- БЕЗ ПРИСАДОК\n"
-            else:
-                receipt += f"- {part}\n"
-    
-    receipt += f"""{'='*40}
-Статус: {order.status}
-Дата: {order.created_at.strftime('%d.%m.%Y %H:%M')}
-{'='*40}
-"""
-    
-    print(receipt)  # В продакшене здесь будет вызов принтера
+            part_text = part
+            if isinstance(part_text, str) and (part_text.strip() == 'no_additives' or part_text.strip().casefold() in no_additives_aliases_cf):
+                part_text = 'БЕЗ ПРИСАДОК'
+            lines.append(f'- {part_text}')
+
+    if order.comment:
+        lines.append(sep)
+        lines.append('Комментарий:')
+        for chunk in textwrap.wrap(str(order.comment), width=width):
+            lines.append(chunk)
+
+    lines += [
+        sep,
+        f'Статус: {order.status}',
+        sep,
+    ]
+
+    receipt = '\n'.join(lines) + '\n'
+    _send_to_thermal_printer(receipt)
     return receipt
 
 # Маршруты приложения
@@ -1183,6 +1241,7 @@ def add_part_to_order(order_id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/orders/<int:order_id>/print', methods=['POST'])
+@admin_required
 def print_order(order_id):
     """API для печати чека"""
     try:

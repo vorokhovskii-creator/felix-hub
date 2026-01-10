@@ -667,20 +667,60 @@
             }
         }
         
+        function openReceiptPrintWindow(receiptText) {
+            const w = window.open('', '_blank', 'noopener,noreferrer,width=420,height=720');
+            if (!w) {
+                alert('⚠️ Браузер заблокировал окно печати. Разрешите pop-up и повторите.');
+                return false;
+            }
+
+            const safe = String(receiptText ?? '');
+            const escaped = safe
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;');
+
+            w.document.open();
+            w.document.write(`<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Печать чека</title>
+  <style>
+    html,body{margin:0;padding:0;background:#fff;}
+    pre{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; line-height:1.25; white-space:pre-wrap; word-break:break-word; padding:12px;}
+    @media print { pre { font-size: 10px; } }
+  </style>
+</head>
+<body>
+  <pre>${escaped}</pre>
+  <script>window.focus(); window.print();</script>
+</body>
+</html>`);
+            w.document.close();
+            return true;
+        }
+
         // Печать чека
         async function printOrder(orderId) {
             try {
                 const response = await fetch(`/api/orders/${orderId}/print`, {
                     method: 'POST'
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
-                    alert('✅ Чек отправлен на печать');
+                    if (data && data.receipt) {
+                        openReceiptPrintWindow(data.receipt);
+                        alert('✅ Открыт диалог печати');
+                    } else {
+                        alert('✅ Чек сформирован');
+                    }
                     loadOrders();
                 } else {
-                    alert('❌ Ошибка печати');
+                    alert(`❌ Ошибка печати${data && data.error ? ': ' + data.error : ''}`);
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
