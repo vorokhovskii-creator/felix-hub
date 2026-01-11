@@ -5,7 +5,7 @@ import socket
 import subprocess
 import textwrap
 from urllib.parse import urlencode
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash, g
 from flask_login import login_user, logout_user, login_required, current_user
@@ -1100,6 +1100,41 @@ def submit_order():
                 
                 normalized_parts.append(part_entry)
         normalized_parts = sort_selected_parts_by_sort_order(normalized_parts, data['category'])
+
+        plate_number_normalized = data['plate_number'].strip().upper()
+        comment_normalized = (data.get('comment') or '').strip()
+        if not comment_normalized:
+            comment_normalized = None
+        is_original_normalized = bool(data.get('is_original', False))
+
+        recent_window_start = datetime.utcnow() - timedelta(seconds=15)
+        recent_query = Order.query.filter(Order.created_at >= recent_window_start)
+        if mechanic_id is not None:
+            recent_query = recent_query.filter(Order.mechanic_id == mechanic_id)
+        else:
+            recent_query = recent_query.filter(Order.mechanic_name == mechanic_name)
+            if telegram_id:
+                recent_query = recent_query.filter(Order.telegram_id == telegram_id)
+
+        recent_orders = recent_query.order_by(Order.created_at.desc()).limit(5).all()
+        for recent in recent_orders:
+            recent_comment = (recent.comment or '').strip()
+            if not recent_comment:
+                recent_comment = None
+
+            if (
+                recent.plate_number == plate_number_normalized
+                and recent.category == data['category']
+                and bool(recent.is_original) == is_original_normalized
+                and recent_comment == comment_normalized
+                and (recent.selected_parts or []) == normalized_parts
+            ):
+                return jsonify({
+                    'success': True,
+                    'order_id': recent.id,
+                    'message': 'Заказ уже был создан',
+                    'deduplicated': True
+                }), 200
         
         # Создание нового заказа
         order = Order(
@@ -1107,11 +1142,11 @@ def submit_order():
             mechanic_name=mechanic_name,
             telegram_id=telegram_id,
             category=data['category'],
-            plate_number=data['plate_number'].strip().upper(),
+            plate_number=plate_number_normalized,
             selected_parts=normalized_parts,  # Сохраняем в новом формате
-            is_original=data.get('is_original', False),
+            is_original=is_original_normalized,
             photo_url=data.get('photo_url'),
-            comment=data.get('comment'),
+            comment=comment_normalized,
             status='новый'
         )
         

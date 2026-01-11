@@ -263,6 +263,12 @@
             transform: translateY(-2px);
         }
 
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-submit:active {
             transform: translateY(0);
         }
@@ -813,6 +819,11 @@
         // Отправка формы
         document.getElementById('orderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            if (this.dataset.submitting === '1') return;
+            this.dataset.submitting = '1';
+
+            const submitButton = this.querySelector('button[type="submit"]');
+            if (submitButton) submitButton.disabled = true;
 
             const alertContainer = document.getElementById('alert-container');
             
@@ -856,6 +867,8 @@
                         {{ _('select_at_least_one_part') }}
                     </div>
                 `;
+                this.dataset.submitting = '0';
+                if (submitButton) submitButton.disabled = false;
                 return;
             }
 
@@ -908,6 +921,8 @@
                             ❌ {{ _('error') }}: ${result.error}
                         </div>
                     `;
+                    this.dataset.submitting = '0';
+                    if (submitButton) submitButton.disabled = false;
                 }
             } catch (error) {
                 alertContainer.innerHTML = `
@@ -915,6 +930,8 @@
                         ❌ {{ _('submission_error') }}: ${error.message}
                     </div>
                 `;
+                this.dataset.submitting = '0';
+                if (submitButton) submitButton.disabled = false;
             }
         });
         
