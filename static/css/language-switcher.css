@@ -13,8 +13,8 @@
 }
 
 .lang-btn {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -24,7 +24,7 @@
     cursor: pointer;
     transition: all 0.3s ease;
     text-decoration: none;
-    font-size: 18px;
+    font-size: 14px;
     backdrop-filter: blur(10px);
 }
 
@@ -173,9 +173,9 @@ body.lang-ru {
 /* Адаптация для мобильных */
 @media (max-width: 768px) {
     .lang-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
     }
     
     .lang-buttons {
@@ -185,9 +185,9 @@ body.lang-ru {
 
 @media (max-width: 480px) {
     .lang-btn {
-        width: 28px;
-        height: 28px;
-        font-size: 14px;
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
     }
     
     .lang-buttons {
