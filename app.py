@@ -1212,6 +1212,8 @@ def get_orders():
         status = request.args.get('status')
         plate_number = request.args.get('plate_number')
         mechanic = request.args.get('mechanic')
+        created_from_raw = request.args.get('created_from')
+        created_to_raw = request.args.get('created_to')
         lang = request.args.get('lang')
         
         query = Order.query
@@ -1224,6 +1226,30 @@ def get_orders():
         
         if mechanic:
             query = query.filter(Order.mechanic_name.ilike(f'%{mechanic}%'))
+
+        created_from = None
+        created_to = None
+        if created_from_raw:
+            created_from_raw = created_from_raw.strip()
+            try:
+                created_from = datetime.strptime(created_from_raw, '%Y-%m-%d') if len(created_from_raw) == 10 else datetime.fromisoformat(created_from_raw)
+            except (TypeError, ValueError):
+                created_from = None
+        if created_to_raw:
+            created_to_raw = created_to_raw.strip()
+            try:
+                created_to = datetime.strptime(created_to_raw, '%Y-%m-%d') if len(created_to_raw) == 10 else datetime.fromisoformat(created_to_raw)
+            except (TypeError, ValueError):
+                created_to = None
+
+        if created_from and created_to and created_from > created_to:
+            created_from, created_to = created_to, created_from
+
+        if created_from:
+            query = query.filter(Order.created_at >= created_from)
+
+        if created_to:
+            query = query.filter(Order.created_at < (created_to + timedelta(days=1)))
         
         orders = query.order_by(Order.created_at.desc()).all()
         
@@ -1233,7 +1259,11 @@ def get_orders():
         if lang not in allowed_langs:
             lang = 'ru'
 
-        return jsonify([order.to_dict(lang=lang) for order in orders])
+        resp = jsonify([order.to_dict(lang=lang) for order in orders])
+        resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        resp.headers['Pragma'] = 'no-cache'
+        resp.headers['Expires'] = '0'
+        return resp
     except Exception as e:
         error_msg = str(e)
         

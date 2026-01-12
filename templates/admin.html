@@ -513,6 +513,16 @@
                     <label>{{ _('mechanic') }}</label>
                     <input type="text" id="filterMechanic" placeholder="{{ _('mechanic_name') }}">
                 </div>
+
+                <div class="filter-group">
+                    <label>Дата с</label>
+                    <input type="date" id="filterDateFrom">
+                </div>
+
+                <div class="filter-group">
+                    <label>Дата по</label>
+                    <input type="date" id="filterDateTo">
+                </div>
                 
                 <div class="filter-group">
                     <label>&nbsp;</label>
@@ -553,6 +563,14 @@
         let pageSize = 25;
         let currentPage = 1;
         let partsIndexByCategory = {};
+        let refreshTimerId = null;
+        let loadOrdersInFlight = false;
+
+        function startAutoRefresh() {
+            if (refreshTimerId) clearInterval(refreshTimerId);
+            const intervalMs = document.hidden ? 30000 : 5000;
+            refreshTimerId = setInterval(loadOrders, intervalMs);
+        }
 
         function loadSavedPageSize() {
             try {
@@ -711,26 +729,41 @@
             }
             preloadPartsIndex().finally(() => {
                 loadOrders();
-                setInterval(loadOrders, 30000);
+                startAutoRefresh();
                 document.getElementById('filterStatus').addEventListener('change', () => { currentPage = 1; loadOrders(); });
                 document.getElementById('filterPlate').addEventListener('input', debounce(() => { currentPage = 1; loadOrders(); }, 500));
                 document.getElementById('filterMechanic').addEventListener('input', debounce(() => { currentPage = 1; loadOrders(); }, 500));
+                document.getElementById('filterDateFrom').addEventListener('change', () => { currentPage = 1; loadOrders(); });
+                document.getElementById('filterDateTo').addEventListener('change', () => { currentPage = 1; loadOrders(); });
             });
+        });
+
+        document.addEventListener('visibilitychange', startAutoRefresh);
+        window.addEventListener('focus', () => {
+            loadOrders();
+            startAutoRefresh();
         });
         
         // Загрузка заказов с сервера
         async function loadOrders() {
+            if (loadOrdersInFlight) return;
+            loadOrdersInFlight = true;
             try {
                 const status = document.getElementById('filterStatus').value;
                 const plate = document.getElementById('filterPlate').value;
                 const mechanic = document.getElementById('filterMechanic').value;
+                const createdFrom = document.getElementById('filterDateFrom').value;
+                const createdTo = document.getElementById('filterDateTo').value;
                 
                 let url = '/api/orders?';
-                if (status !== 'все') url += `status=${status}&`;
+                if (status !== 'все') url += `status=${encodeURIComponent(status)}&`;
                 if (plate) url += `plate_number=${encodeURIComponent(plate)}&`;
                 if (mechanic) url += `mechanic=${encodeURIComponent(mechanic)}&`;
+                if (createdFrom) url += `created_from=${encodeURIComponent(createdFrom)}&`;
+                if (createdTo) url += `created_to=${encodeURIComponent(createdTo)}&`;
+                url += `_=${Date.now()}&`;
                 
-                const response = await fetch(url);
+                const response = await fetch(url, { cache: 'no-store' });
                 orders = await response.json();
                 
                 renderOrders();
@@ -739,6 +772,8 @@
                 console.error('Ошибка загрузки заказов:', error);
                 document.getElementById('tableContent').innerHTML = 
                     '<div class="empty-state">❌ Ошибка загрузки данных</div>';
+            } finally {
+                loadOrdersInFlight = false;
             }
         }
         
