@@ -528,6 +528,11 @@
                     <label>&nbsp;</label>
                     <button class="btn btn-info" onclick="loadOrders()" style="width: 100%;">🔄 {{ _('refresh') }}</button>
                 </div>
+
+                <div class="filter-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-danger" onclick="resetOrderFilters()" style="width: 100%;">✖ Сброс</button>
+                </div>
             </div>
         </div>
         
@@ -775,6 +780,24 @@
             } finally {
                 loadOrdersInFlight = false;
             }
+        }
+
+        function resetOrderFilters() {
+            const statusEl = document.getElementById('filterStatus');
+            const plateEl = document.getElementById('filterPlate');
+            const mechanicEl = document.getElementById('filterMechanic');
+            const fromEl = document.getElementById('filterDateFrom');
+            const toEl = document.getElementById('filterDateTo');
+
+            if (statusEl) statusEl.value = 'все';
+            if (plateEl) plateEl.value = '';
+            if (mechanicEl) mechanicEl.value = '';
+            if (fromEl) fromEl.value = '';
+            if (toEl) toEl.value = '';
+
+            currentPage = 1;
+            loadOrders();
+            startAutoRefresh();
         }
         
         // Отрисовка таблицы заказов
