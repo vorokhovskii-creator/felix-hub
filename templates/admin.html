@@ -80,6 +80,41 @@
             margin-bottom: 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
+
+        .filters.filters-compact {
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .filters.filters-compact .filters-grid {
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 0;
+        }
+
+        .filters.filters-compact .filter-group label {
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        .filters.filters-compact .filter-group input,
+        .filters.filters-compact .filter-group select {
+            padding: 7px 9px;
+            border-width: 1px;
+            font-size: 13px;
+        }
+
+        .filters.filters-compact .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filters.filters-compact .filter-actions .btn {
+            flex: 1;
+            padding: 8px 10px;
+            font-size: 13px;
+        }
         
         .filters-grid {
             display: grid;
@@ -491,7 +526,7 @@
         </div>
         
         <!-- Фильтры -->
-        <div class="filters">
+        <div class="filters filters-compact">
             <div class="filters-grid">
                 <div class="filter-group">
                     <label>{{ _('status') }}</label>
@@ -526,12 +561,10 @@
                 
                 <div class="filter-group">
                     <label>&nbsp;</label>
-                    <button class="btn btn-info" onclick="loadOrders()" style="width: 100%;">🔄 {{ _('refresh') }}</button>
-                </div>
-
-                <div class="filter-group">
-                    <label>&nbsp;</label>
-                    <button class="btn btn-danger" onclick="resetOrderFilters()" style="width: 100%;">✖ Сброс</button>
+                    <div class="filter-actions">
+                        <button class="btn btn-info" onclick="loadOrders()">🔄 {{ _('refresh') }}</button>
+                        <button class="btn btn-danger" onclick="resetOrderFilters()">✖ Сброс</button>
+                    </div>
                 </div>
             </div>
         </div>
