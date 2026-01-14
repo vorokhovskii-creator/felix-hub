@@ -753,6 +753,31 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         }
+
+        function parseApiDateTime(value) {
+            if (!value) return null;
+            if (value instanceof Date) return value;
+
+            const s = String(value).trim();
+            if (!s) return null;
+
+            const looksLikeSql = /^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}(:\d{2})?/.test(s);
+            const hasTimezone = /[zZ]|[+-]\d{2}:?\d{2}$/.test(s);
+
+            let iso = s;
+            if (looksLikeSql) iso = iso.replace(' ', 'T');
+            if (!hasTimezone && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?/.test(iso)) iso = `${iso}Z`;
+
+            const d = new Date(iso);
+            if (Number.isNaN(d.getTime())) return null;
+            return d;
+        }
+
+        function formatOrderCreatedAt(value) {
+            const d = parseApiDateTime(value);
+            if (!d) return '';
+            return d.toLocaleString('ru-RU');
+        }
         
         // Загрузка заказов при старте
         window.addEventListener('DOMContentLoaded', () => {
@@ -918,7 +943,7 @@
                                 <option value="отменено" ${order.status === 'отменено' || order.status === 'отменён' ? 'selected' : ''}>Отменено</option>
                             </select>
                         </td>
-                        <td>${new Date(order.created_at).toLocaleString('ru-RU')}</td>
+                        <td>${formatOrderCreatedAt(order.created_at)}</td>
                         <td>
                             <div class="action-buttons">
                                 <button class="btn btn-sm btn-info" onclick="printOrder(${order.id})">
