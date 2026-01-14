@@ -299,6 +299,38 @@
             padding: 15px;
             border-bottom: 1px solid #f0f0f0;
         }
+
+        .plate-with-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-plate-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #374151;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0;
+            user-select: none;
+        }
+
+        .copy-plate-btn:hover {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+        }
+
+        .copy-plate-btn:active {
+            transform: translateY(1px);
+        }
         
         tbody tr:hover {
             background: #f8f9fa;
@@ -754,6 +786,49 @@
                 .replace(/'/g, '&#039;');
         }
 
+        async function copyTextToClipboard(text) {
+            const value = String(text ?? '').trim();
+            if (!value) return false;
+
+            try {
+                if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                    await navigator.clipboard.writeText(value);
+                    return true;
+                }
+            } catch (_) {
+            }
+
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = value;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                ta.style.top = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                ta.setSelectionRange(0, ta.value.length);
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return ok;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function bindPlateCopyButtons(root) {
+            if (!root) return;
+            root.querySelectorAll('button[data-copy-plate]').forEach((btn) => {
+                if (btn.dataset.boundCopyPlate === '1') return;
+                btn.dataset.boundCopyPlate = '1';
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    await copyTextToClipboard(btn.getAttribute('data-copy-plate'));
+                });
+            });
+        }
+
         function parseApiDateTime(value) {
             if (!value) return null;
             if (value instanceof Date) return value;
@@ -899,11 +974,17 @@
                 const map = partsIndexByCategory[order.category];
                 const selectedParts = Array.isArray(order.selected_parts) ? [...order.selected_parts] : [];
                 if (map) selectedParts.sort((a, b) => partOrderIndex(a, map) - partOrderIndex(b, map));
+                const plateNumberEscaped = escapeHtml(order.plate_number);
                 html += `
                     <tr>
                         <td><strong>#${order.id}</strong></td>
                         <td>${order.mechanic_name}</td>
-                        <td><strong>${order.plate_number}</strong></td>
+                        <td>
+                            <span class="plate-with-copy">
+                                <strong>${plateNumberEscaped}</strong>
+                                <button type="button" class="copy-plate-btn" data-copy-plate="${plateNumberEscaped}" title="Копировать" aria-label="Копировать гос номер">⧉</button>
+                            </span>
+                        </td>
                         <td>${order.category}</td>
                         <td>
                             <div class="parts-list">
@@ -960,6 +1041,7 @@
             
             html += '</tbody></table>';
             content.innerHTML = html;
+            bindPlateCopyButtons(content);
             renderPaginationControls();
         }
         
