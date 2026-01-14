@@ -310,11 +310,11 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
-            border: 1px solid #e5e7eb;
-            background: #fff;
-            border-radius: 8px;
+            width: auto;
+            height: auto;
+            border: none;
+            background: transparent;
+            border-radius: 0;
             cursor: pointer;
             color: #374151;
             font-size: 14px;
@@ -324,12 +324,19 @@
         }
 
         .copy-plate-btn:hover {
-            border-color: #cbd5e1;
-            background: #f8fafc;
+            color: #111827;
         }
 
         .copy-plate-btn:active {
-            transform: translateY(1px);
+            color: #111827;
+        }
+
+        .copy-plate-btn:focus {
+            outline: none;
+        }
+
+        .copy-plate-btn:focus-visible {
+            outline: none;
         }
         
         tbody tr:hover {
