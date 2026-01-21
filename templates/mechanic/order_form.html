@@ -866,6 +866,26 @@
                 }
             }
         }
+        
+        // Применение глобального типа ко всем деталям
+        function applyGlobalPartType(isOriginal) {
+            // Обновляем все видимые переключатели
+            document.querySelectorAll('.part-type-toggle').forEach(toggle => {
+                toggle.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+                if (isOriginal) {
+                    toggle.querySelector('.type-btn.original').classList.add('active');
+                } else {
+                    toggle.querySelector('.type-btn.analog').classList.add('active');
+                }
+            });
+            
+            // Обновляем все выбранные детали в selectedPartsGlobal
+            for (const key in selectedPartsGlobal) {
+                if (!selectedPartsGlobal[key].is_label) { // Не меняем для меток типа "БЕЗ ПРИСАДОК"
+                    selectedPartsGlobal[key].is_original = isOriginal;
+                }
+            }
+        }
 
         // Добавление ручной детали
         function addManualPart() {
@@ -1022,6 +1042,14 @@
         toggleAdditives(null);
         syncRadioGroupActive(document.getElementById('additives-group'));
         loadCatalog();
+        
+        // Обработчик глобального переключателя оригинал/аналог
+        document.querySelectorAll('input[name="is_original"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const isOriginal = this.value === 'true';
+                applyGlobalPartType(isOriginal);
+            });
+        });
     </script>
     <script src="{{ url_for('static', filename='js/mobile-enhancements.js') }}"></script>
     <script src="{{ url_for('static', filename='js/nav-scroll.js') }}"></script>
