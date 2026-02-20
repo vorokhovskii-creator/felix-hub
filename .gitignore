@@ -1,0 +1,11 @@
+*.pyc
+__pycache__/
+.env
+felix_hub.db
+instance/
+.DS_Store
+uploads/
+venv/
+felix_hub_dump.sql
+felix_hub_dump.sql.save
+neon_backup.sql

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="{{ g.locale or 'ru' }}" dir="{{ 'rtl' if g.locale == 'he' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Felix Hub - Управление механиками">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{{ _('manage_mechanics') }} - Felix Hub Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/language-switcher.css') }}">
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .page-header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-header h1 {
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn-white {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-white:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            padding: 12px 24px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f9fafb;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            font-size: 14px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #047857;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.3em;
+            }
+            
+            .header-actions {
+                gap: 10px;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1>👥 {{ _('manage_mechanics') if _('manage_mechanics') != 'manage_mechanics' else 'Управление механиками' }}</h1>
+            <div class="header-actions">
+                <!-- Переключатель языка -->
+                <div class="language-switcher">
+                    <div class="lang-buttons">
+                        <a href="/set_language/ru?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'ru' else '' }}" 
+                           title="Русский"><img src="{{ url_for('static', filename='Icons/rus.svg') }}" alt="Русский"></a>
+                        <a href="/set_language/en?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'en' else '' }}" 
+                           title="English"><img src="{{ url_for('static', filename='Icons/gb.svg') }}" alt="English"></a>
+                        <a href="/set_language/he?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'he' else '' }}" 
+                           title="עברית"><img src="{{ url_for('static', filename='Icons/israel.svg') }}" alt="עברית"></a>
+                    </div>
+                </div>
+                <a href="{{ url_for('admin') }}" class="btn btn-white">← {{ _('home') if _('home') != 'home' else 'Главная' }}</a>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-white">{{ _('logout') if _('logout') != 'logout' else 'Выход' }}</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="nav">
+            <a href="{{ url_for('admin') }}">{{ _('orders') }}</a>
+            <a href="{{ url_for('admin_parts') }}">{{ _('parts.title') }}</a>
+            <a href="{{ url_for('admin_mechanics') }}" class="active">{{ _('manage_mechanics') }}</a>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>{{ _('mechanic_list') }}</h2>
+                <button class="btn btn-primary" onclick="openCreateModal()">+ {{ _('add_mechanic') }}</button>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <div id="statsContainer" class="stats-grid"></div>
+
+            <table id="mechanicsTable">
+                <thead>
+                    <tr>
+                        <th>{{ _('mechanic_id') }}</th>
+                        <th>{{ _('username') }}</th>
+                        <th>{{ _('full_name') }}</th>
+                        <th>Telegram ID</th>
+                        <th>{{ _('phone') }}</th>
+                        <th>{{ _('orders') }}</th>
+                        <th>{{ _('status') }}</th>
+                        <th>{{ _('actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody id="mechanicsBody">
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                            {{ _('loading') }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal создания/редактирования -->
+    <div id="mechanicModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">{{ _('add_mechanic') }}</h2>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+
+            <form id="mechanicForm">
+                <input type="hidden" id="mechanicId">
+
+                <div class="form-group">
+                    <label for="username">{{ _('username') }} *</label>
+                    <input type="text" id="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name">{{ _('full_name') }} *</label>
+                    <input type="text" id="full_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">{{ _('password') }} <span id="passwordLabel">*</span></label>
+                    <input type="password" id="password">
+                    <small style="color: #666;">{{ _('min_6_chars') }}. {{ _('leave_empty_to_keep') }}</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="telegram_id">Telegram ID</label>
+                    <input type="text" id="telegram_id">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">{{ _('phone') }}</label>
+                    <input type="text" id="phone">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email">
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="is_active" checked>
+                        <label for="is_active">{{ _('active') }}</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="notify_on_ready" checked>
+                        <label for="notify_on_ready">{{ _('notify_on_order_ready') }}</label>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">{{ _('btn.save') }}</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">{{ _('btn.cancel') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let mechanics = [];
+        let isEditMode = false;
+
+        // Загрузка механиков
+        async function loadMechanics() {
+            try {
+                const response = await fetch('/api/admin/mechanics');
+                mechanics = await response.json();
+                renderMechanics();
+                renderStats();
+            } catch (error) {
+                console.error(t('error_loading_data') + ':', error);
+            }
+        }
+
+        // Отрисовка таблицы
+        function renderMechanics() {
+            const tbody = document.getElementById('mechanicsBody');
+            
+            if (mechanics.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                            ${t('no_mechanics_yet')}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = mechanics.map(m => `
+                <tr>
+                    <td>${m.id}</td>
+                    <td><strong>${m.username}</strong></td>
+                    <td>${m.full_name}</td>
+                    <td>${m.telegram_id || '—'}</td>
+                    <td>${m.phone || '—'}</td>
+                    <td>${m.stats ? m.stats.total : 0}</td>
+                    <td>
+                        <span class="status-badge status-${m.is_active ? 'active' : 'inactive'}">
+                            ${m.is_active ? t('active') : t('inactive')}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-primary btn-small" onclick="editMechanic(${m.id})">
+                                ${t('btn.edit')}
+                            </button>
+                            <button class="btn ${m.is_active ? 'btn-danger' : 'btn-success'} btn-small" 
+                                    onclick="toggleActive(${m.id}, ${m.is_active})">
+                                ${m.is_active ? t('deactivate') : t('activate')}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Статистика
+        function renderStats() {
+            const total = mechanics.length;
+            const active = mechanics.filter(m => m.is_active).length;
+            const inactive = total - active;
+
+            document.getElementById('statsContainer').innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-number">${total}</div>
+                    <div class="stat-label">${t('total')}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${active}</div>
+                    <div class="stat-label">${t('active_plural')}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">${inactive}</div>
+                    <div class="stat-label">${t('inactive_plural')}</div>
+                </div>
+            `;
+        }
+
+        // Открыть модалку создания
+        function openCreateModal() {
+            isEditMode = false;
+            document.getElementById('modalTitle').textContent = t('add_mechanic');
+            document.getElementById('mechanicForm').reset();
+            document.getElementById('mechanicId').value = '';
+            document.getElementById('password').required = true;
+            document.getElementById('passwordLabel').textContent = '*';
+            document.getElementById('mechanicModal').classList.add('active');
+        }
+
+        // Редактировать
+        async function editMechanic(id) {
+            try {
+                const response = await fetch(`/api/admin/mechanics/${id}`);
+                const mechanic = await response.json();
+
+                isEditMode = true;
+                document.getElementById('modalTitle').textContent = t('edit_mechanic');
+                document.getElementById('mechanicId').value = mechanic.id;
+                document.getElementById('username').value = mechanic.username;
+                document.getElementById('full_name').value = mechanic.full_name;
+                document.getElementById('telegram_id').value = mechanic.telegram_id || '';
+                document.getElementById('phone').value = mechanic.phone || '';
+                document.getElementById('email').value = mechanic.email || '';
+                document.getElementById('is_active').checked = mechanic.is_active;
+                document.getElementById('notify_on_ready').checked = mechanic.notify_on_ready;
+                document.getElementById('password').value = '';
+                document.getElementById('password').required = false;
+                document.getElementById('passwordLabel').textContent = '';
+
+                document.getElementById('mechanicModal').classList.add('active');
+            } catch (error) {
+                showAlert(t('error_loading_data'), 'error');
+            }
+        }
+
+        // Закрыть модалку
+        function closeModal() {
+            document.getElementById('mechanicModal').classList.remove('active');
+        }
+
+        // Сохранить
+        document.getElementById('mechanicForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value,
+                full_name: document.getElementById('full_name').value,
+                telegram_id: document.getElementById('telegram_id').value || null,
+                phone: document.getElementById('phone').value || null,
+                email: document.getElementById('email').value || null,
+                is_active: document.getElementById('is_active').checked,
+                notify_on_ready: document.getElementById('notify_on_ready').checked
+            };
+
+            const password = document.getElementById('password').value;
+            if (password) {
+                formData.password = password;
+            }
+
+            try {
+                let response;
+                if (isEditMode) {
+                    const id = document.getElementById('mechanicId').value;
+                    response = await fetch(`/api/admin/mechanics/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    if (!password) {
+                        showAlert(t('password_required_on_create'), 'error');
+                        return;
+                    }
+                    response = await fetch('/api/admin/mechanics', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                }
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert(isEditMode ? t('mechanic_updated') : t('mechanic_created'), 'success');
+                    closeModal();
+                    loadMechanics();
+                } else {
+                    showAlert(result.error, 'error');
+                }
+            } catch (error) {
+                showAlert(t('error') + ': ' + error.message, 'error');
+            }
+        });
+
+        // Активировать/деактивировать
+        async function toggleActive(id, currentStatus) {
+            try {
+                const response = await fetch(`/api/admin/mechanics/${id}/toggle-active`, {
+                    method: 'PUT'
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert(result.is_active ? t('mechanic_activated') : t('mechanic_deactivated'), 'success');
+                    loadMechanics();
+                } else {
+                    showAlert(result.error, 'error');
+                }
+            } catch (error) {
+                showAlert(t('error') + ': ' + error.message, 'error');
+            }
+        }
+
+        // Показать уведомление
+        function showAlert(message, type) {
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+
+        // Инициализация
+        loadMechanics();
+    </script>
+    <script src="{{ url_for('static', filename='js/mobile-enhancements.js') }}"></script>
+    <div style="text-align: center; padding: 18px 12px; color: #9ca3af; font-size: 12px;">Developed by Vorokhovskii Mikhail</div>
+</body>
+</html>

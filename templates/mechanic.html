@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Felix Hub - Форма заказа запчастей">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Felix Hub - Механик</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+        
+        .form-group input[type="text"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        .form-group select {
+            -webkit-appearance: menulist;
+            appearance: menulist;
+            background-color: white;
+            cursor: pointer;
+        }
+        
+        .form-group input[type="text"]:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            gap: 10px;
+        }
+        
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+        
+        .checkbox-item.checked {
+            background: #e7f1ff;
+            border-color: #667eea;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+            accent-color: #667eea;
+            -webkit-appearance: checkbox;
+            appearance: checkbox;
+        }
+        
+        .checkbox-item .part-name {
+            flex: 1;
+        }
+        
+        .checkbox-item .quantity-control {
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item.checked .quantity-control {
+            display: flex;
+        }
+        
+        /* Переключатель оригинал/аналог для каждой детали */
+        .checkbox-item .part-type-toggle {
+            display: none;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        
+        .checkbox-item.checked .part-type-toggle {
+            display: flex;
+        }
+        
+        .part-type-toggle .type-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #f8f9fa;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .part-type-toggle .type-btn:hover {
+            border-color: #667eea;
+        }
+        
+        .part-type-toggle .type-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .part-type-toggle .type-btn.original.active {
+            background: #10b981;
+            border-color: #10b981;
+        }
+        
+        .part-type-toggle .type-btn.analog.active {
+            background: #f59e0b;
+            border-color: #f59e0b;
+        }
+        
+        .quantity-control label {
+            font-size: 13px;
+            color: #666;
+            margin: 0;
+            font-weight: normal;
+        }
+        
+        .quantity-control input[type="number"] {
+            width: 60px;
+            padding: 6px 8px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .quantity-control input[type="number"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .custom-parts {
+            margin-top: 15px;
+        }
+        
+        .custom-parts-input {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .custom-parts-input input {
+            flex: 1;
+        }
+        
+        .add-btn {
+            padding: 14px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .add-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .custom-parts-list {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .custom-part-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        .custom-part-tag button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .radio-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .radio-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .success-message,
+        .error-message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .parts-counter {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .custom-parts-input {
+                flex-direction: column;
+            }
+            
+            /* Фиксируем прокрутку для select на мобильных устройствах */
+            .form-group select {
+                font-size: 16px; /* Предотвращает зум на iOS */
+                max-height: none; /* Убираем ограничение высоты */
+                -webkit-appearance: menulist-button; /* Нативный вид для iOS */
+                appearance: menulist-button;
+            }
+            
+            /* Для Android */
+            .form-group select option {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← Назад</a>
+        
+        <div class="header">
+            <h1 id="pageTitle">🔧 Новый заказ</h1>
+            <p class="subtitle" id="pageSubtitle">Заполните форму для заказа запчастей</p>
+        </div>
+        
+        <div id="successMessage" class="success-message hidden"></div>
+        <div id="errorMessage" class="error-message hidden"></div>
+        
+        <form id="orderForm">
+            <!-- Имя механика -->
+            <div class="form-group">
+                <label for="mechanicName" id="labelMechanic">Ваше имя *</label>
+                <input type="text" id="mechanicName" name="mechanicName" required placeholder="Давид">
+            </div>
+            
+            <!-- Telegram ID (опционально) -->
+            <div class="form-group">
+                <label for="telegramId" id="labelTelegram">Telegram ID (для уведомлений)</label>
+                <input type="text" id="telegramId" name="telegramId" placeholder="123456789">
+            </div>
+            
+            <!-- Гос номер -->
+            <div class="form-group">
+                <label for="plateNumber" id="labelPlate">Гос номер автомобиля *</label>
+                <input type="text" id="plateNumber" name="plateNumber" required 
+                       placeholder="123-45-678" 
+                       style="text-transform: uppercase;">
+            </div>
+            
+            <!-- Категория -->
+            <div class="form-group">
+                <label for="category" id="labelCategory">Категория деталей *</label>
+                <select id="category" name="category" required>
+                    <option value="">-- Выберите категорию --</option>
+                    {% for category in catalog.keys() %}
+                    <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Список деталей -->
+            <div class="form-group" id="partsGroup" style="display: none;">
+                <label id="labelParts">Выберите детали *</label>
+                <div class="checkbox-group" id="partsList"></div>
+                <div class="parts-counter" id="partsCounter">Выбрано: 0</div>
+            </div>
+            
+            <!-- Добавить вручную -->
+            <div class="form-group custom-parts">
+                <label id="labelCustom">Добавить деталь вручную</label>
+                <div class="custom-parts-input">
+                    <input type="text" id="customPart" placeholder="Название детали">
+                    <button type="button" class="add-btn" id="addCustomBtn">+ Добавить</button>
+                </div>
+                <div class="custom-parts-list" id="customPartsList"></div>
+            </div>
+            
+            <!-- Оригинал/Аналог -->
+            <div class="form-group">
+                <label id="labelType">Тип запчастей</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="typeOriginal" name="partType" value="original" checked>
+                        <label for="typeOriginal" id="labelOriginal">� Оригинал</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="typeAnalog" name="partType" value="analog">
+                        <label for="typeAnalog" id="labelAnalog">� Аналог</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Комментарий -->
+            <div class="form-group">
+                <label for="comment" id="labelComment">Комментарий</label>
+                <textarea id="comment" name="comment" placeholder="Дополнительная информация..."></textarea>
+            </div>
+            
+            <!-- Кнопка отправки -->
+            <button type="submit" class="submit-btn" id="submitBtn">📦 Отправить заказ</button>
+        </form>
+    </div>
+    
+    <script>
+        // Переводы
+        const translations = {
+            ru: {
+                pageTitle: '🔧 Новый заказ',
+                pageSubtitle: 'Заполните форму для заказа запчастей',
+                labelMechanic: 'Ваше имя *',
+                labelTelegram: 'Telegram ID (для уведомлений)',
+                labelPlate: 'Гос номер автомобиля *',
+                labelCategory: 'Категория деталей *',
+                labelParts: 'Выберите детали *',
+                labelCustom: 'Добавить деталь вручную',
+                labelType: 'Тип запчастей',
+                labelAnalog: '💰 Аналог',
+                labelOriginal: '🔧 Оригинал',
+                labelComment: 'Комментарий',
+                submitBtn: '📦 Отправить заказ',
+                addCustomBtn: '+ Добавить',
+                selectCategory: '-- Выберите категорию --',
+                partsCounter: 'Выбрано: ',
+                quantityLabel: 'Кол-во',
+                successMessage: '✅ Заказ успешно отправлен! Номер заказа: ',
+                errorPlate: '❌ Введите корректный гос номер',
+                errorParts: '❌ Выберите хотя бы одну деталь',
+                errorSubmit: '❌ Ошибка отправки заказа: '
+            },
+            en: {
+                pageTitle: '🔧 New Order',
+                pageSubtitle: 'Fill in the form to order parts',
+                labelMechanic: 'Your name *',
+                labelTelegram: 'Telegram ID (for notifications)',
+                labelPlate: 'License plate number *',
+                labelCategory: 'Parts category *',
+                labelParts: 'Select parts *',
+                labelCustom: 'Add custom part',
+                labelType: 'Parts type',
+                labelAnalog: '💰 Analog',
+                labelOriginal: '🔧 Original',
+                labelComment: 'Comment',
+                submitBtn: '📦 Submit order',
+                addCustomBtn: '+ Add',
+                selectCategory: '-- Select category --',
+                partsCounter: 'Selected: ',
+                quantityLabel: 'Qty',
+                successMessage: '✅ Order submitted successfully! Order ID: ',
+                errorPlate: '❌ Enter a valid license plate',
+                errorParts: '❌ Select at least one part',
+                errorSubmit: '❌ Error submitting order: '
+            },
+            he: {
+                pageTitle: '🔧 הזמנה חדשה',
+                pageSubtitle: 'מלא את הטופס להזמנת חלקי חילוף',
+                labelMechanic: 'שמך *',
+                labelTelegram: 'Telegram ID (להתראות)',
+                labelPlate: 'מספר רישוי *',
+                labelCategory: 'קטגוריית חלקים *',
+                labelParts: 'בחר חלקים *',
+                labelCustom: 'הוסף חלק באופן ידני',
+                labelType: 'סוג חלקים',
+                labelAnalog: '💰 אנלוגי',
+                labelOriginal: '🔧 מקורי',
+                labelComment: 'הערות',
+                submitBtn: '📦 שלח הזמנה',
+                addCustomBtn: '+ הוסף',
+                selectCategory: '-- בחר קטגוריה --',
+                partsCounter: 'נבחרו: ',
+                quantityLabel: 'כמות',
+                successMessage: '✅ ההזמנה נשלחה בהצלחה! מספר הזמנה: ',
+                errorPlate: '❌ הזן מספר רישוי תקין',
+                errorParts: '❌ בחר לפחות חלק אחד',
+                errorSubmit: '❌ שגיאה בשליחת ההזמנה: '
+            }
+        };
+        
+        // Текущий язык
+        const urlParams = new URLSearchParams(window.location.search);
+        const lang = urlParams.get('lang') || 'ru';
+        const t = translations[lang];
+        
+        // Применение переводов
+        document.getElementById('pageTitle').textContent = t.pageTitle;
+        document.getElementById('pageSubtitle').textContent = t.pageSubtitle;
+        document.getElementById('labelMechanic').textContent = t.labelMechanic;
+        document.getElementById('labelTelegram').textContent = t.labelTelegram;
+        document.getElementById('labelPlate').textContent = t.labelPlate;
+        document.getElementById('labelCategory').textContent = t.labelCategory;
+        document.getElementById('labelParts').textContent = t.labelParts;
+        document.getElementById('labelCustom').textContent = t.labelCustom;
+        document.getElementById('labelType').textContent = t.labelType;
+        document.getElementById('labelAnalog').textContent = t.labelAnalog;
+        document.getElementById('labelOriginal').textContent = t.labelOriginal;
+        document.getElementById('labelComment').textContent = t.labelComment;
+        document.getElementById('submitBtn').textContent = t.submitBtn;
+        document.getElementById('addCustomBtn').textContent = t.addCustomBtn;
+        
+        // Каталог запчастей
+        const catalog = {{ catalog | tojson }};
+        
+        // Выбранные детали - сохраняем с количеством и ID
+        let selectedParts = {}; // Формат: { 'id_или_name': { name: 'название', quantity: число, part_id: id } }
+        let customParts = [];
+        
+        // Обработчик выбора категории
+        document.getElementById('category').addEventListener('change', function() {
+            const category = this.value;
+            const partsGroup = document.getElementById('partsGroup');
+            const partsList = document.getElementById('partsList');
+            
+            if (category && catalog[category]) {
+                partsGroup.style.display = 'block';
+                partsList.innerHTML = '';
+                
+                catalog[category].forEach(part => {
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-item';
+                    
+                    // Поддержка нового формата (объект с id и name) и старого (просто строка)
+                    const partId = typeof part === 'object' ? part.id : null;
+                    const partName = typeof part === 'object' ? part.name : part;
+                    const partKey = partId || partName; // Ключ для selectedParts
+                    
+                    // Проверяем, была ли эта деталь уже выбрана
+                    const isChecked = selectedParts.hasOwnProperty(partKey);
+                    const quantity = isChecked ? selectedParts[partKey].quantity : 1;
+                    
+                    if (isChecked) {
+                        div.classList.add('checked');
+                    }
+                    
+                    const safeId = 'part_' + partName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                    
+                    // Получаем глобальное значение is_original
+                    const globalIsOriginal = document.getElementById('typeOriginal').checked;
+                    const partIsOriginal = isChecked && selectedParts[partKey].hasOwnProperty('is_original') 
+                        ? selectedParts[partKey].is_original 
+                        : globalIsOriginal;
+                    
+                    div.innerHTML = `
+                        <input type="checkbox" 
+                               id="${safeId}" 
+                               value="${partName}" 
+                               data-part-id="${partId || ''}"
+                               ${isChecked ? 'checked' : ''}>
+                        <span class="part-name">${partName}</span>
+                        <div class="part-type-toggle">
+                            <span class="type-btn original ${partIsOriginal ? 'active' : ''}" 
+                                  onclick="event.stopPropagation(); event.preventDefault(); setPartType(this, true)">💎 ${t.labelOriginal || 'Ориг'}</span>
+                            <span class="type-btn analog ${!partIsOriginal ? 'active' : ''}" 
+                                  onclick="event.stopPropagation(); event.preventDefault(); setPartType(this, false)">🔄 ${t.labelAnalog || 'Аналог'}</span>
+                        </div>
+                        <div class="quantity-control">
+                            <label>${t.quantityLabel || 'Кол-во'}:</label>
+                            <input type="number" 
+                                   min="1" 
+                                   max="999" 
+                                   value="${quantity}"
+                                   class="part-quantity"
+                                   onclick="event.stopPropagation()">
+                        </div>
+                    `;
+                    partsList.appendChild(div);
+                    
+                    // Обработчик изменения чекбокса
+                    const checkbox = div.querySelector('input[type="checkbox"]');
+                    const quantityInput = div.querySelector('.part-quantity');
+                    
+                    checkbox.addEventListener('change', function() {
+                        const partId = this.getAttribute('data-part-id');
+                        const partKey = partId || this.value;
+                        
+                        // Переключаем класс checked на родительском div
+                        if (this.checked) {
+                            div.classList.add('checked');
+                            // Получаем is_original из переключателя детали или глобального
+                            const typeToggle = div.querySelector('.part-type-toggle');
+                            const isOriginal = typeToggle.querySelector('.type-btn.original').classList.contains('active');
+                            
+                            selectedParts[partKey] = {
+                                name: this.value,
+                                quantity: parseInt(quantityInput.value) || 1,
+                                part_id: partId ? parseInt(partId) : null,
+                                is_original: isOriginal
+                            };
+                        } else {
+                            div.classList.remove('checked');
+                            delete selectedParts[partKey];
+                        }
+                        updateSelectedParts();
+                    });
+                    
+                    // Обработчик изменения количества
+                    quantityInput.addEventListener('change', function(e) {
+                        e.stopPropagation();
+                        if (checkbox.checked) {
+                            const qty = parseInt(this.value) || 1;
+                            this.value = Math.max(1, Math.min(999, qty));
+                            const partId = checkbox.getAttribute('data-part-id');
+                            const partKey = partId || checkbox.value;
+                            if (selectedParts[partKey]) {
+                                selectedParts[partKey].quantity = parseInt(this.value);
+                            }
+                        }
+                    });
+                });
+            } else {
+                partsGroup.style.display = 'none';
+                partsList.innerHTML = '';
+            }
+            
+            updateSelectedParts();
+        });
+        
+        // Обновление списка выбранных деталей
+        function updateSelectedParts() {
+            const total = Object.keys(selectedParts).length + customParts.length;
+            document.getElementById('partsCounter').textContent = t.partsCounter + total;
+        }
+        
+        // Установка типа детали (оригинал/аналог) для конкретной позиции
+        function setPartType(btn, isOriginal) {
+            const toggle = btn.closest('.part-type-toggle');
+            const item = btn.closest('.checkbox-item');
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            
+            // Обновляем UI
+            toggle.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Обновляем данные если деталь выбрана
+            if (checkbox && checkbox.checked) {
+                const partId = checkbox.getAttribute('data-part-id');
+                const partKey = partId || checkbox.value;
+                if (selectedParts[partKey]) {
+                    selectedParts[partKey].is_original = isOriginal;
+                }
+            }
+        }
+        
+        // Применение глобального типа ко всем деталям при изменении радио-кнопок
+        document.querySelectorAll('input[name="partType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const isOriginal = document.getElementById('typeOriginal').checked;
+                
+                // Обновляем все видимые переключатели
+                document.querySelectorAll('.part-type-toggle').forEach(toggle => {
+                    toggle.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+                    if (isOriginal) {
+                        toggle.querySelector('.type-btn.original').classList.add('active');
+                    } else {
+                        toggle.querySelector('.type-btn.analog').classList.add('active');
+                    }
+                });
+                
+                // Обновляем все выбранные детали в selectedParts
+                for (const key in selectedParts) {
+                    selectedParts[key].is_original = isOriginal;
+                }
+            });
+        });
+        
+        // Добавление кастомной детали
+        document.getElementById('addCustomBtn').addEventListener('click', function() {
+            const input = document.getElementById('customPart');
+            const value = input.value.trim();
+            
+            if (value && !customParts.includes(value)) {
+                customParts.push(value);
+                
+                const tag = document.createElement('div');
+                tag.className = 'custom-part-tag';
+                tag.innerHTML = `
+                    <span>${value}</span>
+                    <button type="button" onclick="removeCustomPart('${value}')">×</button>
+                `;
+                
+                document.getElementById('customPartsList').appendChild(tag);
+                input.value = '';
+                updateSelectedParts();
+            }
+        });
+        
+        // Удаление кастомной детали
+        function removeCustomPart(part) {
+            customParts = customParts.filter(p => p !== part);
+            
+            const tags = document.querySelectorAll('.custom-part-tag');
+            tags.forEach(tag => {
+                if (tag.textContent.includes(part)) {
+                    tag.remove();
+                }
+            });
+            
+            updateSelectedParts();
+        }
+        
+        // Отправка формы
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const mechanicName = document.getElementById('mechanicName').value.trim();
+            const telegramId = document.getElementById('telegramId').value.trim();
+            const plateNumber = document.getElementById('plateNumber').value.trim();
+            const category = document.getElementById('category').value;
+            const isOriginal = document.getElementById('typeOriginal').checked;
+            const comment = document.getElementById('comment').value.trim();
+            
+            // Валидация
+            if (!plateNumber || plateNumber.length < 5) {
+                showError(t.errorPlate);
+                return;
+            }
+            
+                        // Формируем список деталей с количеством и ID
+            const allParts = [];
+            
+            // Добавляем выбранные детали из каталога
+            for (const key in selectedParts) {
+                const part = selectedParts[key];
+                const partData = {
+                    name: part.name,
+                    quantity: part.quantity,
+                    is_original: part.is_original !== undefined ? part.is_original : isOriginal
+                };
+                
+                // Если есть part_id, добавляем его для перевода
+                if (part.part_id) {
+                    partData.part_id = part.part_id;
+                }
+                
+                allParts.push(partData);
+            }
+            
+            // Добавляем кастомные детали (без ID, по умолчанию количество 1, берём глобальный is_original)
+            customParts.forEach(part => {
+                allParts.push({
+                    name: part,
+                    quantity: 1,
+                    is_original: isOriginal
+                });
+            });
+            
+            if (allParts.length === 0) {
+                showError(t.errorParts);
+                return;
+            }
+            
+            // Отключаем кнопку
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Отправка...';
+            
+            try {
+                const response = await fetch('/api/submit_order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mechanic_name: mechanicName,
+                        telegram_id: telegramId || null,
+                        plate_number: plateNumber,
+                        category: category,
+                        selected_parts: allParts,
+                        is_original: isOriginal,
+                        comment: comment || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showSuccess(t.successMessage + data.order_id);
+                    
+                    // Очистка формы
+                    setTimeout(() => {
+                        document.getElementById('orderForm').reset();
+                        selectedParts = [];
+                        customParts = [];
+                        document.getElementById('partsGroup').style.display = 'none';
+                        document.getElementById('customPartsList').innerHTML = '';
+                        updateSelectedParts();
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = t.submitBtn;
+                    }, 2000);
+                } else {
+                    showError(t.errorSubmit + (data.error || 'Unknown error'));
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = t.submitBtn;
+                }
+            } catch (error) {
+                showError(t.errorSubmit + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = t.submitBtn;
+            }
+        });
+        
+        // Показ сообщений
+        function showSuccess(message) {
+            const el = document.getElementById('successMessage');
+            el.textContent = message;
+            el.classList.remove('hidden');
+            document.getElementById('errorMessage').classList.add('hidden');
+            
+            setTimeout(() => {
+                el.classList.add('hidden');
+            }, 5000);
+        }
+        
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = message;
+            el.classList.remove('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/mobile-enhancements.js') }}"></script>
+    <div style="text-align: center; padding: 18px 12px; color: #9ca3af; font-size: 12px;">Developed by Vorokhovskii Mikhail</div>
+</body>
+</html>

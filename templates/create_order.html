@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="{{ g.locale or 'ru' }}" dir="{{ 'rtl' if g.locale == 'he' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Felix Hub - Новый заказ">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{{ _('new_order') }} - Felix Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/language-switcher.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fixed-header-nav.css') }}">
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .main-content {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 60px; /* Offset for fixed header */
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .form-group input[type="text"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group select {
+            -webkit-appearance: menulist;
+            appearance: menulist;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            gap: 10px;
+        }
+
+        .checkbox-item:hover {
+            background: #e9ecef;
+        }
+        
+        .checkbox-item.checked {
+            background: #e7f1ff;
+            border-color: #667eea;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+            accent-color: #667eea;
+            -webkit-appearance: checkbox;
+            appearance: checkbox;
+        }
+        
+        .checkbox-item .part-name {
+            flex: 1;
+        }
+        
+        .checkbox-item .quantity-control {
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-item.checked .quantity-control {
+            display: flex;
+        }
+        
+        .quantity-control label {
+            font-size: 13px;
+            color: #666;
+            margin: 0;
+            font-weight: normal;
+        }
+        
+        .quantity-control input[type="number"] {
+            width: 60px;
+            padding: 6px 8px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .quantity-control input[type="number"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        /* Переключатель оригинал/аналог для каждой детали */
+        .checkbox-item .part-type-toggle {
+            display: none;
+            gap: 4px;
+            margin-left: 8px;
+        }
+        
+        .checkbox-item.checked .part-type-toggle {
+            display: flex;
+        }
+        
+        .part-type-toggle .type-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #f8f9fa;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .part-type-toggle .type-btn:hover {
+            border-color: #667eea;
+        }
+        
+        .part-type-toggle .type-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .part-type-toggle .type-btn.original.active {
+            background: #10b981;
+            border-color: #10b981;
+        }
+        
+        .part-type-toggle .type-btn.analog.active {
+            background: #f59e0b;
+            border-color: #f59e0b;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .radio-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .radio-item:hover {
+            border-color: #667eea;
+        }
+
+        .radio-item.active,
+        .radio-item:has(input[type="radio"]:checked) {
+            background: #667eea;
+            border-color: #667eea;
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.25);
+        }
+
+        .radio-item.active span,
+        .radio-item:has(input[type="radio"]:checked) span {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .radio-item.active input[type="radio"],
+        .radio-item:has(input[type="radio"]:checked) input[type="radio"] {
+            accent-color: #fff;
+        }
+
+        .radio-item input[type="radio"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .radio-item input[type="radio"]:checked + span {
+            font-weight: 700;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #047857;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .manual-parts {
+            margin-top: 10px;
+        }
+
+        .manual-part-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .manual-part-item input[type="text"] {
+            flex: 1;
+        }
+        
+        .manual-part-item input[type="number"] {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .manual-part-item button {
+            padding: 10px 15px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-add-part {
+            padding: 10px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .header-link {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .header-link:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* RTL Fixes */
+        [dir="rtl"] .checkbox-group {
+            display: flex;
+            flex-direction: column !important;
+            width: 100%;
+        }
+
+        [dir="rtl"] .checkbox-item {
+            display: flex;
+            width: 100%;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        [dir="rtl"] .checkbox-item input[type="checkbox"] {
+            margin-left: 10px;
+            margin-right: 0;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.3em;
+            }
+            
+            .header-actions {
+                gap: 10px;
+            }
+            
+            .container {
+                padding: 30px 20px;
+            }
+            
+            select {
+                font-size: 16px !important;
+                -webkit-appearance: menulist-button;
+                appearance: menulist-button;
+                max-height: none;
+            }
+            
+            select option {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1>🔧 {{ _('new_order') }} - Felix Hub</h1>
+            <div class="header-actions">
+                <!-- Переключатель языка -->
+                <div class="language-switcher">
+                    <div class="lang-buttons">
+                        <a href="/set_language/ru?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'ru' else '' }}" 
+                           title="Русский"><img src="{{ url_for('static', filename='Icons/rus.svg') }}" alt="Русский"></a>
+                        <a href="/set_language/en?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'en' else '' }}" 
+                           title="English"><img src="{{ url_for('static', filename='Icons/gb.svg') }}" alt="English"></a>
+                        <a href="/set_language/he?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'he' else '' }}" 
+                           title="עברית"><img src="{{ url_for('static', filename='Icons/israel.svg') }}" alt="עברית"></a>
+                    </div>
+                </div>
+                <a href="/orders" class="header-link">📺 {{ _('orders_status_board') }}</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="container">
+        <div id="alert-container"></div>
+
+        <form id="orderForm">
+            <!-- Выбор механика -->
+            <div class="form-group">
+                <label for="mechanic_id">{{ _('full_name') }} *</label>
+                <select id="mechanic_id" name="mechanic_id" required>
+                    <option value="">-- {{ _('select') if _('select') != 'select' else 'Выберите' }} --</option>
+                    {% for mechanic in mechanics %}
+                    <option value="{{ mechanic.id }}">{{ mechanic.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="plate_number">{{ _('plate_number') }} *</label>
+                <input type="text" 
+                       id="plate_number" 
+                       name="plate_number" 
+                       placeholder="123-45-678" 
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label for="category">{{ _('parts_category') }} *</label>
+                <select id="category" name="category" required>
+                    <option value="">{{ _('select_category') }}</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>{{ _('select_parts_from_list') }}:</label>
+                <div id="partsList" class="checkbox-group">
+                    <p style="color: #999; font-size: 14px;">{{ _('select_category_first') }}</p>
+                </div>
+                <div style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                    <span id="partsCounter">{{ _('selected') if _('selected') != 'selected' else 'Выбрано' }}: 0</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>{{ _('or_add_manually') }}:</label>
+                <div id="manualParts" class="manual-parts"></div>
+                <button type="button" class="btn-add-part" onclick="addManualPart()">+ {{ _('add_part') }}</button>
+            </div>
+
+            <div class="form-group">
+                <label>{{ _('parts_type') }} *</label>
+                <div class="radio-group">
+                    <label class="radio-item">
+                        <input type="radio" name="is_original" value="true" checked>
+                        <span>💎 {{ _('original') }}</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="is_original" value="false">
+                        <span>🔄 {{ _('analog') }}</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>{{ _('additives') }}</label>
+                <div class="radio-group" id="additives-group">
+                    <label class="radio-item">
+                        <input type="radio" name="additives_mode" value="with">
+                        <span>🧪 {{ _('with_additives') }}</span>
+                    </label>
+                    <label class="radio-item">
+                        <input type="radio" name="additives_mode" value="without">
+                        <span>🚫 {{ _('without_additives') }}</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="comment">{{ _('comment') }} ({{ _('optional') }})</label>
+                <textarea id="comment" 
+                          name="comment" 
+                          placeholder="{{ _('additional_info') }}..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                {{ _('create_order') }}
+            </button>
+        </form>
+        </div>
+    </div>
+
+    <script>
+        let catalog = {};
+        let manualPartCounter = 0;
+        const currentLang = '{{ g.locale or "ru" }}';
+        
+        // Сохраняем выбранные детали из всех категорий с количеством
+        let selectedPartsGlobal = {}; // Формат: { 'Название детали': количество }
+
+        // Добавки: Очиститель стекол и Топливная присадка
+        const ADDITIVES = ['Присадка для омывателя стёкол', 'Присадка для топлива'];
+        let currentAdditivesMode = null; // 'with', 'without', or null
+
+        function normalizeAdditiveKey(value) {
+            return String(value || '')
+                .trim()
+                .toLowerCase()
+                .replace(/ё/g, 'е');
+        }
+
+        function syncRadioGroupActive(group) {
+            if (!group) return;
+            group.querySelectorAll('.radio-item').forEach(item => {
+                const input = item.querySelector('input[type="radio"]');
+                item.classList.toggle('active', Boolean(input && input.checked));
+            });
+        }
+
+        function initRadioGroups() {
+            document.querySelectorAll('.radio-group').forEach(group => {
+                group.addEventListener('change', function(e) {
+                    if (e.target && e.target.matches('input[type="radio"]')) {
+                        syncRadioGroupActive(group);
+                    }
+                });
+                syncRadioGroupActive(group);
+            });
+
+            const additivesGroup = document.getElementById('additives-group');
+            if (additivesGroup) {
+                additivesGroup.addEventListener('click', function(e) {
+                    const label = e.target.closest('.radio-item');
+                    if (!label || !additivesGroup.contains(label)) return;
+
+                    const input = label.querySelector('input[type="radio"]');
+                    if (!input) return;
+
+                    e.preventDefault();
+
+                    const mode = input.value;
+                    const isSame = currentAdditivesMode === mode;
+
+                    additivesGroup.querySelectorAll('input[name="additives_mode"]').forEach(i => {
+                        i.checked = false;
+                    });
+
+                    if (isSame) {
+                        currentAdditivesMode = null;
+                        toggleAdditives(null);
+                    } else {
+                        input.checked = true;
+                        currentAdditivesMode = mode;
+                        toggleAdditives(mode);
+                    }
+
+                    syncRadioGroupActive(additivesGroup);
+                });
+
+                syncRadioGroupActive(additivesGroup);
+            }
+        }
+
+        function toggleAdditives(mode) {
+             // Ищем детали в каталоге
+            ADDITIVES.forEach(additiveName => {
+                let foundPart = null;
+                let foundCategory = null;
+
+                // Поиск детали в каталоге
+                for (const cat in catalog) {
+                    const parts = catalog[cat];
+                    const part = parts.find(p => {
+                        const pRuName = typeof p === 'object' ? (p.name_ru || p.name) : p;
+                        return normalizeAdditiveKey(pRuName) === normalizeAdditiveKey(additiveName);
+                    });
+                    if (part) {
+                        foundPart = part;
+                        foundCategory = cat;
+                        break;
+                    }
+                }
+
+                if (foundPart) {
+                    const partName = typeof foundPart === 'object' ? foundPart.name : foundPart;
+                    const partId = typeof foundPart === 'object' ? foundPart.id : null;
+                    const partKey = partId || partName;
+
+                    if (mode === 'with') {
+                        // Добавляем в selectedPartsGlobal
+                        if (!selectedPartsGlobal[partKey]) {
+                            selectedPartsGlobal[partKey] = {
+                                name: partName,
+                                quantity: 1,
+                                part_id: partId
+                            };
+                        }
+                    } else {
+                        // Удаляем из selectedPartsGlobal
+                        if (selectedPartsGlobal[partKey]) {
+                            delete selectedPartsGlobal[partKey];
+                        }
+                    }
+
+                    // Если мы находимся в категории этой детали, обновляем чекбокс
+                    const categorySelect = document.getElementById('category');
+                    if (categorySelect.value === foundCategory) {
+                        // Находим чекбокс по value или data-part-id
+                        const checkboxes = document.querySelectorAll('input[name="selected_parts"]');
+                        checkboxes.forEach(cb => {
+                            const cbId = cb.getAttribute('data-part-id');
+                            const cbName = cb.value;
+                            if ((partId && cbId == partId) || (!partId && cbName === partName)) {
+                                cb.checked = (mode === 'with');
+                                const item = cb.closest('.checkbox-item');
+                                if (mode === 'with') {
+                                    item.classList.add('checked');
+                                } else {
+                                    item.classList.remove('checked');
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Логика для надписи "БЕЗ ПРИСАДОК"
+            const noAdditivesKey = 'no_additives_label';
+            if (mode === 'without') {
+                // Добавляем маркер "БЕЗ ПРИСАДОК"
+                const labelName = '{{ _("no_additives") if _("no_additives") != "no_additives" else "БЕЗ ПРИСАДОК" }}';
+                selectedPartsGlobal[noAdditivesKey] = {
+                    name: labelName,
+                    quantity: 1,
+                    part_id: null, // Это виртуальная деталь
+                    is_label: true
+                };
+            } else {
+                // Удаляем маркер
+                if (selectedPartsGlobal[noAdditivesKey]) {
+                    delete selectedPartsGlobal[noAdditivesKey];
+                }
+            }
+
+            updatePartsCounter();
+        }
+
+        // Загрузка каталога из API
+        async function loadCatalog() {
+            try {
+                const response = await fetch(`/api/parts/catalog?active_only=true&lang=${currentLang}`);
+                catalog = await response.json();
+                
+                // Заполняем select категорий
+                const categorySelect = document.getElementById('category');
+                const categories = Object.keys(catalog).sort();
+                
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+
+                if (currentAdditivesMode) {
+                    toggleAdditives(currentAdditivesMode);
+                }
+            } catch (error) {
+                console.error('{{ _("error_loading_catalog") }}:', error);
+            }
+        }
+
+        // Обработка изменения категории
+        document.getElementById('category').addEventListener('change', function() {
+            const category = this.value;
+            const partsList = document.getElementById('partsList');
+            
+            if (!category) {
+                partsList.innerHTML = '<p style="color: #999; font-size: 14px;">{{ _("select_category_first") }}</p>';
+                return;
+            }
+
+            const parts = catalog[category] || [];
+            partsList.innerHTML = '';
+
+            parts.forEach(part => {
+                const item = document.createElement('label');
+                item.className = 'checkbox-item';
+                
+                // Поддержка нового формата (объект с id и name) и старого (просто строка)
+                const partId = typeof part === 'object' ? part.id : null;
+                const partName = typeof part === 'object' ? part.name : part;
+                const partKey = partId || partName; // Ключ для selectedPartsGlobal
+                
+                // Проверяем, была ли эта деталь уже выбрана
+                const isChecked = selectedPartsGlobal.hasOwnProperty(partKey);
+                const quantity = isChecked ? selectedPartsGlobal[partKey].quantity : 1;
+                
+                if (isChecked) {
+                    item.classList.add('checked');
+                }
+                
+                const safeId = 'part_' + String(partId || partName).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+                
+                // Получаем значение is_original из сохранённых данных или из глобального переключателя
+                const globalIsOriginal = document.querySelector('input[name="is_original"]:checked').value === 'true';
+                const partIsOriginal = isChecked && selectedPartsGlobal[partKey].hasOwnProperty('is_original') 
+                    ? selectedPartsGlobal[partKey].is_original 
+                    : globalIsOriginal;
+                
+                item.innerHTML = `
+                    <input type="checkbox" 
+                           id="${safeId}"
+                           name="selected_parts" 
+                           value="${partName}"
+                           data-part-id="${partId || ''}"
+                           ${isChecked ? 'checked' : ''}>
+                    <span class="part-name">${partName}</span>
+                    <div class="part-type-toggle">
+                        <span class="type-btn original ${partIsOriginal ? 'active' : ''}" 
+                              onclick="event.stopPropagation(); event.preventDefault(); setPartType(this, true)">{{ _('part_orig') if _('part_orig') != 'part_orig' else 'ориг' }}</span>
+                        <span class="type-btn analog ${!partIsOriginal ? 'active' : ''}" 
+                              onclick="event.stopPropagation(); event.preventDefault(); setPartType(this, false)">{{ _('part_analog') if _('part_analog') != 'part_analog' else 'аналог' }}</span>
+                    </div>
+                    <div class="quantity-control">
+                        <label>{{ _('quantity') if _('quantity') != 'quantity' else 'Кол-во' }}:</label>
+                        <input type="number" 
+                               min="1" 
+                               max="999" 
+                               value="${quantity}"
+                               class="part-quantity"
+                               onclick="event.stopPropagation()">
+                    </div>
+                `;
+                partsList.appendChild(item);
+                
+                // Добавляем обработчик изменения чекбокса
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                const quantityInput = item.querySelector('.part-quantity');
+                
+                checkbox.addEventListener('change', function() {
+                    const partId = this.getAttribute('data-part-id');
+                    const partKey = partId || this.value;
+                    
+                    // Переключаем класс checked на родительском label
+                    if (this.checked) {
+                        item.classList.add('checked');
+                        // Получаем текущее значение is_original из переключателя детали или глобального
+                        const typeToggle = item.querySelector('.part-type-toggle');
+                        const isOriginal = typeToggle.querySelector('.type-btn.original').classList.contains('active');
+                        
+                        // Добавляем в глобальный объект с количеством и ID
+                        selectedPartsGlobal[partKey] = {
+                            name: this.value,
+                            quantity: parseInt(quantityInput.value) || 1,
+                            part_id: partId ? parseInt(partId) : null,
+                            is_original: isOriginal
+                        };
+                    } else {
+                        item.classList.remove('checked');
+                        // Удаляем из глобального объекта
+                        delete selectedPartsGlobal[partKey];
+                    }
+                    updatePartsCounter();
+                });
+                
+                // Обработчик изменения количества
+                quantityInput.addEventListener('change', function(e) {
+                    e.stopPropagation();
+                    if (checkbox.checked) {
+                        const qty = parseInt(this.value) || 1;
+                        this.value = Math.max(1, Math.min(999, qty));
+                        const partId = checkbox.getAttribute('data-part-id');
+                        const partKey = partId || checkbox.value;
+                        if (selectedPartsGlobal[partKey]) {
+                            selectedPartsGlobal[partKey].quantity = parseInt(this.value);
+                        }
+                    }
+                });
+            });
+            updatePartsCounter();
+        });
+        
+        // Обновление счётчика выбранных деталей
+        function updatePartsCounter() {
+            const counter = document.getElementById('partsCounter');
+            if (counter) {
+                const manualCount = document.querySelectorAll('.manual-part-input').length;
+                const total = Object.keys(selectedPartsGlobal).length + manualCount;
+                counter.textContent = '{{ _("selected") if _("selected") != "selected" else "Выбрано" }}: ' + total;
+            }
+        }
+        
+        // Установка типа детали (оригинал/аналог) для конкретной позиции
+        function setPartType(btn, isOriginal) {
+            const toggle = btn.closest('.part-type-toggle');
+            const item = btn.closest('.checkbox-item');
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            
+            // Обновляем UI
+            toggle.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Обновляем данные если деталь выбрана
+            if (checkbox && checkbox.checked) {
+                const partId = checkbox.getAttribute('data-part-id');
+                const partKey = partId || checkbox.value;
+                if (selectedPartsGlobal[partKey]) {
+                    selectedPartsGlobal[partKey].is_original = isOriginal;
+                }
+            }
+        }
+        
+        // Применение глобального типа ко всем деталям
+        function applyGlobalPartType(isOriginal) {
+            // Обновляем все видимые переключатели
+            document.querySelectorAll('.part-type-toggle').forEach(toggle => {
+                toggle.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+                if (isOriginal) {
+                    toggle.querySelector('.type-btn.original').classList.add('active');
+                } else {
+                    toggle.querySelector('.type-btn.analog').classList.add('active');
+                }
+            });
+            
+            // Обновляем все выбранные детали в selectedPartsGlobal
+            for (const key in selectedPartsGlobal) {
+                if (!selectedPartsGlobal[key].is_label) { // Не меняем для меток типа "БЕЗ ПРИСАДОК"
+                    selectedPartsGlobal[key].is_original = isOriginal;
+                }
+            }
+        }
+
+        // Добавление ручной детали
+        function addManualPart() {
+            const container = document.getElementById('manualParts');
+            const item = document.createElement('div');
+            item.className = 'manual-part-item';
+            item.innerHTML = `
+                <input type="text" 
+                       class="manual-part-input" 
+                       placeholder="{{ _('part_name') }}"
+                       data-id="${manualPartCounter}">
+                <input type="number" 
+                       min="1" 
+                       max="999" 
+                       value="1"
+                       class="manual-part-quantity"
+                       placeholder="{{ _('quantity') if _('quantity') != 'quantity' else 'Кол-во' }}">
+                <button type="button" onclick="removeManualPart(this)">✕</button>
+            `;
+            container.appendChild(item);
+            manualPartCounter++;
+            updatePartsCounter();
+        }
+
+        function removeManualPart(btn) {
+            btn.parentElement.remove();
+            updatePartsCounter();
+        }
+
+        // Отправка формы
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const alertContainer = document.getElementById('alert-container');
+            
+            // Формируем массив деталей с количеством и ID
+            const selectedParts = [];
+            
+            // Добавляем детали из каталога
+            for (const key in selectedPartsGlobal) {
+                const part = selectedPartsGlobal[key];
+                const partData = {
+                    name: part.name,
+                    quantity: part.quantity,
+                    is_original: part.hasOwnProperty('is_original') ? part.is_original : (document.querySelector('input[name="is_original"]:checked').value === 'true')
+                };
+                
+                // Если есть part_id, добавляем его для перевода
+                if (part.part_id) {
+                    partData.part_id = part.part_id;
+                }
+                
+                selectedParts.push(partData);
+            }
+
+            // Добавляем ручные детали (без ID)
+            const manualPartInputs = document.querySelectorAll('.manual-part-input');
+            const manualPartQuantities = document.querySelectorAll('.manual-part-quantity');
+            
+            manualPartInputs.forEach((input, index) => {
+                const partName = input.value.trim();
+                if (partName) {
+                    const quantity = parseInt(manualPartQuantities[index].value) || 1;
+                    selectedParts.push({
+                        name: partName,
+                        quantity: quantity
+                    });
+                }
+            });
+
+            if (selectedParts.length === 0) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        {{ _('select_at_least_one_part') }}
+                    </div>
+                `;
+                return;
+            }
+
+            const mechanicId = document.getElementById('mechanic_id').value;
+
+            const formData = {
+                mechanic_id: mechanicId,
+                plate_number: document.getElementById('plate_number').value,
+                category: document.getElementById('category').value,
+                selected_parts: selectedParts,
+                is_original: document.querySelector('input[name="is_original"]:checked').value === 'true',
+                comment: document.getElementById('comment').value
+            };
+
+            try {
+                const response = await fetch('/api/submit_order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ {{ _('order') }} №${result.order_id} {{ _('successfully_created') }}!
+                        </div>
+                    `;
+                    
+                    window.scrollTo(0, 0);
+
+                    const redirectUrl = `/orders`;
+                    setTimeout(() => {
+                        window.location.assign(redirectUrl);
+                    }, 1200);
+                } else {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-error">
+                            ❌ {{ _('error') }}: ${result.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ {{ _('submission_error') }}: ${error.message}
+                    </div>
+                `;
+            }
+        });
+        
+        initRadioGroups();
+        toggleAdditives(null);
+        syncRadioGroupActive(document.getElementById('additives-group'));
+        loadCatalog();
+        
+        // Обработчик глобального переключателя оригинал/аналог
+        document.querySelectorAll('input[name="is_original"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const isOriginal = this.value === 'true';
+                applyGlobalPartType(isOriginal);
+            });
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/mobile-enhancements.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nav-scroll.js') }}"></script>
+    <div style="text-align: center; padding: 18px 12px; color: #9ca3af; font-size: 12px;">Developed by Vorokhovskii Mikhail</div>
+</body>
+</html>

@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="{{ g.locale }}" dir="{{ 'rtl' if g.locale == 'he' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Felix Hub - Мои заказы">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{{ _('my_orders') }} - Felix Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/language-switcher.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fixed-header-nav.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+        }
+        
+        /* Стили шапки и навигации перенесены в fixed-header-nav.css */
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Стили навигации перенесены в fixed-header-nav.css */
+        
+        .btn-logout {
+            background: white;
+            color: #667eea;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .filters {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .orders-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .orders-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .orders-count {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .order-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .order-id {
+            font-weight: 700;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-badge.новый { 
+            background: #dbeafe; 
+            color: #1e40af; 
+        }
+        .status-badge.в-работе { 
+            background: #fef3c7; 
+            color: #b45309; 
+        }
+        .status-badge.готово { 
+            background: #d1fae5; 
+            color: #047857; 
+        }
+        .status-badge.выдано { 
+            background: #e5e7eb; 
+            color: #374151; 
+        }
+        .status-badge.отменено { 
+            background: #fee2e2; 
+            color: #991b1b; 
+        }
+
+        .order-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .detail-item strong {
+            color: #333;
+        }
+
+        .parts-list {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .parts-list h4 {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .parts-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .parts-list li {
+            padding: 4px 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .parts-list li:before {
+            content: "• ";
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .comment-box {
+            background: #fef3c7;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .comment-box strong {
+            color: #b45309;
+            font-size: 13px;
+        }
+
+        .comment-box p {
+            color: #78350f;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.3em;
+            }
+            
+            .header-actions {
+                gap: 10px;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .order-details {
+                grid-template-columns: 1fr;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1>🔧 {{ _('my_orders') }} - {{ current_user.full_name }}</h1>
+            <div class="header-actions">
+                <!-- Переключатель языка -->
+                <div class="language-switcher">
+                    <div class="lang-buttons">
+                        <a href="/set_language/ru?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'ru' else '' }}" 
+                           title="Русский"><img src="{{ url_for('static', filename='Icons/rus.svg') }}" alt="Русский"></a>
+                        <a href="/set_language/en?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'en' else '' }}" 
+                           title="English"><img src="{{ url_for('static', filename='Icons/gb.svg') }}" alt="English"></a>
+                        <a href="/set_language/he?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'he' else '' }}" 
+                           title="עברית"><img src="{{ url_for('static', filename='Icons/israel.svg') }}" alt="עברית"></a>
+                    </div>
+                </div>
+                <a href="{{ url_for('mechanic_logout') }}" class="btn-logout">{{ _('logout') }}</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-wrapper">
+        <div class="nav-container">
+            <div class="nav">
+                <a href="{{ url_for('mechanic_dashboard') }}">{{ _('home') }}</a>
+                <a href="{{ url_for('mechanic_orders') }}" class="active">{{ _('my_orders') }}</a>
+                <a href="{{ url_for('mechanic_new_order') }}">{{ _('new_order') }}</a>
+                <a href="{{ url_for('mechanic_profile') }}">{{ _('profile') }}</a>
+                <a href="{{ url_for('mechanic_settings') }}">{{ _('settings') }}</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="filters">
+            <form method="GET" action="{{ url_for('mechanic_orders') }}">
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label for="status">{{ _('status') }}</label>
+                        <select id="status" name="status">
+                            <option value="все" {% if request.args.get('status', 'все') == 'все' %}selected{% endif %}>{{ _('all_statuses') }}</option>
+                            <option value="новый" {% if request.args.get('status') == 'новый' %}selected{% endif %}>{{ _('status_new') }}</option>
+                            <option value="в работе" {% if request.args.get('status') == 'в работе' %}selected{% endif %}>{{ _('status_in_progress') }}</option>
+                            <option value="готово" {% if request.args.get('status') == 'готово' %}selected{% endif %}>{{ _('status_ready') }}</option>
+                            <option value="выдано" {% if request.args.get('status') == 'выдано' %}selected{% endif %}>{{ _('status_delivered') }}</option>
+                            <option value="отменено" {% if request.args.get('status') == 'отменено' %}selected{% endif %}>{{ _('status_cancelled') }}</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="plate_number">{{ _('plate_number') }}</label>
+                        <input type="text" 
+                               id="plate_number" 
+                               name="plate_number" 
+                               placeholder="{{ _('search_by_plate') }}"
+                               value="{{ request.args.get('plate_number', '') }}">
+                    </div>
+
+                    <div class="filter-group" style="align-self: flex-end;">
+                        <button type="submit" class="btn btn-primary">{{ _('apply') }}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="orders-section">
+            <div class="orders-header">
+                <h2>{{ _('orders_list') }}</h2>
+                <span class="orders-count">{{ _('found') }}: {{ orders|length }}</span>
+            </div>
+
+            {% if orders %}
+                {% for order in orders %}
+                <div class="order-card">
+                    <div class="order-top">
+                        <div class="order-id">{{ _('order') }} №{{ order.id }}</div>
+                        <span class="status-badge {{ order.status }}">{{ get_status_translation(order.status) }}</span>
+                    </div>
+
+                    <div class="order-details">
+                        <div class="detail-item">
+                            🚗 <strong>{{ _('plate_number') }}:</strong> {{ order.plate_number }}
+                        </div>
+                        <div class="detail-item">
+                            📦 <strong>{{ _('category') }}:</strong> {{ get_category_name(order.category) }}
+                        </div>
+                        <div class="detail-item">
+                            {{ '🔧' if order.is_original else '💰' }} 
+                            <strong>{{ _('type') }}:</strong> {{ _('original') if order.is_original else _('analog') }}
+                        </div>
+                        <div class="detail-item">
+                            ⏰ <strong>{{ _('created') }}:</strong> {{ format_dt(order.created_at) }}
+                        </div>
+                    </div>
+
+                    {% set parts = order.selected_parts_localized if order.selected_parts_localized is defined else (order.selected_parts_sorted if order.selected_parts_sorted is defined else order.selected_parts) %}
+                    {% if parts %}
+                    <div class="parts-list">
+                        <h4>{{ _('parts') }}:</h4>
+                        <ul>
+                            {% for part in parts %}
+                                {% if part is mapping %}
+                                    {# Новый формат с количеством #}
+                                    <li>
+                                        {{ part.name }}
+                                        {% if part.quantity > 1 %}
+                                            <strong style="color: #667eea;">(x{{ part.quantity }})</strong>
+                                        {% endif %}
+                                        {% if part.is_original is defined %}
+                                            {% if part.is_original %}
+                                                <span style="background: #d1e7dd; color: #0f5132; padding: 2px 6px; border-radius: 8px; font-size: 0.7em; font-weight: 700; margin-left: 4px;">{{ _('part_orig') }}</span>
+                                            {% else %}
+                                                <span style="background: #f8d7da; color: #721c24; padding: 2px 6px; border-radius: 8px; font-size: 0.7em; font-weight: 700; margin-left: 4px;">{{ _('part_analog') }}</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </li>
+                                {% else %}
+                                    {# Старый формат (просто строка) #}
+                                    <li>{{ part }}</li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="add-part-box" style="margin-top:10px;">
+                        {% if order.status not in ['готово', 'выдано'] %}
+                        <button class="btn btn-secondary" type="button" data-order-id="{{ order.id }}" data-category="{{ order.category }}" onclick="toggleAddPartFromButton(this)">+ {{ _('add_part') }}</button>
+                        {% endif %}
+                        {% if order.status == 'новый' %}
+                        <form action="{{ url_for('mechanic_cancel_order', order_id=order.id) }}" method="POST" style="display:inline-block; margin-left: 10px;" data-confirm="{{ _('confirm_cancel_order') }}" onsubmit="return confirmFromForm(this);">
+                            <button type="submit" class="btn" style="background-color: #fee2e2; color: #991b1b; border: 1px solid #991b1b;">{{ _('cancel_order') }}</button>
+                        </form>
+                        {% endif %}
+                        {% if order.status not in ['готово', 'выдано'] %}
+                        <div id="addPartForm-{{ order.id }}" style="display:none; margin-top:8px;">
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                                <select id="addPartCategory-{{ order.id }}" style="padding:8px; border:2px solid #e0e0e0; border-radius:8px;"></select>
+                                <select id="addPartSelect-{{ order.id }}" style="padding:8px; border:2px solid #e0e0e0; border-radius:8px;"></select>
+                                <input type="number" id="addPartQty-{{ order.id }}" min="1" value="1" style="padding:8px; border:2px solid #e0e0e0; border-radius:8px; width:80px;">
+                                <div class="part-type-toggle" id="addPartType-{{ order.id }}" style="display:flex; gap:4px;">
+                                    <span class="type-btn original active" onclick="setAddPartType({{ order.id }}, true)" style="padding:6px 10px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:#d1e7dd; color:#0f5132; border:2px solid #10b981;">{{ _('part_orig') }}</span>
+                                    <span class="type-btn analog" onclick="setAddPartType({{ order.id }}, false)" style="padding:6px 10px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:#f3f4f6; color:#6b7280; border:2px solid #e5e7eb;">{{ _('part_analog') }}</span>
+                                </div>
+                                <button class="btn btn-primary" type="button" data-order-id="{{ order.id }}" onclick="submitAddPartFromButton(this)">{{ _('add') if _('add') != 'add' else 'Добавить' }}</button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if order.comment %}
+                    <div class="comment-box">
+                        <strong>💬 {{ _('comment') }}:</strong>
+                        <p>{{ order.comment }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h3>{{ _('no_orders_found') }}</h3>
+                    <p>{{ _('try_different_filters') }}</p>
+                    <br>
+                    <a href="{{ url_for('mechanic_new_order') }}" class="btn btn-primary">+ {{ _('create_order') }}</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mobile-enhancements.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nav-scroll.js') }}"></script>
+    <script>
+        window.addPartCategoryCache = window.addPartCategoryCache || {};
+        window.addPartIsOriginal = window.addPartIsOriginal || {};
+        
+        function setAddPartType(orderId, isOriginal) {
+            window.addPartIsOriginal[orderId] = isOriginal;
+            const toggle = document.getElementById(`addPartType-${orderId}`);
+            if (!toggle) return;
+            const origBtn = toggle.querySelector('.type-btn.original');
+            const analogBtn = toggle.querySelector('.type-btn.analog');
+            if (isOriginal) {
+                origBtn.classList.add('active');
+                origBtn.style.background = '#d1e7dd';
+                origBtn.style.color = '#0f5132';
+                origBtn.style.borderColor = '#10b981';
+                analogBtn.classList.remove('active');
+                analogBtn.style.background = '#f3f4f6';
+                analogBtn.style.color = '#6b7280';
+                analogBtn.style.borderColor = '#e5e7eb';
+            } else {
+                analogBtn.classList.add('active');
+                analogBtn.style.background = '#f8d7da';
+                analogBtn.style.color = '#721c24';
+                analogBtn.style.borderColor = '#f59e0b';
+                origBtn.classList.remove('active');
+                origBtn.style.background = '#f3f4f6';
+                origBtn.style.color = '#6b7280';
+                origBtn.style.borderColor = '#e5e7eb';
+            }
+        }
+        
+        function toggleAddPartFromButton(btn) {
+            const orderId = parseInt(btn.dataset.orderId);
+            const category = btn.dataset.category;
+            return toggleAddPart(orderId, category);
+        }
+        function submitAddPartFromButton(btn) {
+            const orderId = parseInt(btn.dataset.orderId);
+            return submitAddPart(orderId);
+        }
+        function confirmFromForm(form) {
+            return confirm(form.dataset.confirm || '');
+        }
+        async function toggleAddPart(orderId, category) {
+            const form = document.getElementById(`addPartForm-${orderId}`);
+            const partSelect = document.getElementById(`addPartSelect-${orderId}`);
+            const catSelect = document.getElementById(`addPartCategory-${orderId}`);
+            if (form.style.display === 'none') {
+                // Инициализируем is_original в true при открытии формы
+                window.addPartIsOriginal[orderId] = true;
+                try {
+                    const lang = '{{ g.locale }}';
+                    // Получаем список категорий: локализованный и сырой
+                    const [rawRes, locRes] = await Promise.all([
+                        fetch(`/api/categories`),
+                        fetch(`/api/categories?lang=${lang}`)
+                    ]);
+                    const rawCats = await rawRes.json();
+                    const locCats = await locRes.json();
+                    const byIdRaw = {}; rawCats.forEach(c => byIdRaw[c.id] = c);
+                    const byIdLoc = {}; locCats.forEach(c => byIdLoc[c.id] = c);
+                    window.addPartCategoryCache[orderId] = { byIdRaw, byIdLoc };
+
+                    // Определяем raw категорию для заказа
+                    let rawCategory = category;
+                    const match = rawCats.find(c => c.name === category || c.name_ru === category || c.name_en === category || c.name_he === category);
+                    if (match) rawCategory = match.name;
+
+                    // Заполняем селект категорий локализованными названиями
+                    catSelect.innerHTML = locCats.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                    if (match && byIdLoc[match.id]) {
+                        catSelect.value = String(match.id);
+                    }
+
+                    // Загружаем детали для выбранной категории
+                    await loadPartsForCategory(orderId, rawCategory);
+                } catch (e) {
+                    partSelect.innerHTML = '';
+                }
+                form.style.display = 'block';
+                // Подписка на изменение категории
+                catSelect.onchange = async () => {
+                    const cache = window.addPartCategoryCache[orderId];
+                    const id = parseInt(catSelect.value);
+                    const rawName = cache && cache.byIdRaw[id] ? cache.byIdRaw[id].name : null;
+                    await loadPartsForCategory(orderId, rawName || catSelect.options[catSelect.selectedIndex].text);
+                };
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        async function loadPartsForCategory(orderId, rawCategory) {
+            const lang = '{{ g.locale }}';
+            const partSelect = document.getElementById(`addPartSelect-${orderId}`);
+            if (!rawCategory) { partSelect.innerHTML = ''; return; }
+            const resp = await fetch(`/api/parts?category=${encodeURIComponent(rawCategory)}&active_only=true&lang=${lang}`);
+            const parts = await resp.json();
+            partSelect.innerHTML = parts.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        }
+        async function submitAddPart(orderId) {
+            const select = document.getElementById(`addPartSelect-${orderId}`);
+            const qty = parseInt(document.getElementById(`addPartQty-${orderId}`).value) || 1;
+            const partId = parseInt(select.value);
+            const isOriginal = window.addPartIsOriginal[orderId] !== undefined ? window.addPartIsOriginal[orderId] : true;
+            try {
+                const response = await fetch(`/api/orders/${orderId}/add-part`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ part_id: partId, quantity: qty, is_original: isOriginal })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    alert('❌ Ошибка добавления');
+                    return;
+                }
+                alert('➕ Деталь добавлена');
+                location.reload();
+            } catch (e) {
+                alert('❌ Ошибка добавления');
+            }
+        }
+    </script>
+    <div style="text-align: center; padding: 18px 12px; color: #9ca3af; font-size: 12px;">Developed by Vorokhovskii Mikhail</div>
+</body>
+</html>

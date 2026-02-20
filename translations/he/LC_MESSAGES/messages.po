@@ -1,0 +1,834 @@
+# Hebrew translations for Felix Hub
+# Copyright (C) 2025 Felix Hub
+# This file is distributed under the same license as Felix Hub.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Felix Hub 2.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-03 12:00+0000\n"
+"PO-Revision-Date: 2025-11-03 12:00+0000\n"
+"Last-Translator: Felix Hub Team\n"
+"Language: he\n"
+"Language-Team: Hebrew\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.17.0\n"
+
+# Навигация
+msgid "nav.parts_management"
+msgstr "ניהול חלקים"
+
+msgid "nav.categories"
+msgstr "קטגוריות"
+
+msgid "nav.mechanics"
+msgstr "מכונאים"
+
+msgid "nav.orders"
+msgstr "הזמנות"
+
+msgid "nav.dashboard"
+msgstr "לוח בקרה"
+
+msgid "nav.back"
+msgstr "חזור"
+
+# Кнопки
+msgid "btn.add"
+msgstr "הוסף"
+
+msgid "btn.edit"
+msgstr "ערוך"
+
+msgid "btn.delete"
+msgstr "מחק"
+
+msgid "btn.save"
+msgstr "שמור"
+
+msgid "btn.cancel"
+msgstr "בטל"
+
+msgid "btn.import"
+msgstr "ייבא"
+
+msgid "btn.export"
+msgstr "ייצא"
+
+msgid "btn.search"
+msgstr "חפש"
+
+msgid "btn.filter"
+msgstr "סנן"
+
+msgid "btn.apply"
+msgstr "החל"
+
+# Запчасти
+msgid "parts.title"
+msgstr "ניהול חלקים וקטגוריות"
+
+msgid "parts.add_part"
+msgstr "+ חלק"
+
+msgid "parts.add_category"
+msgstr "+ קטגוריה"
+
+msgid "parts.part_number"
+msgstr "מספר חלק"
+
+msgid "parts.name"
+msgstr "שם"
+
+msgid "parts.category"
+msgstr "קטגוריה"
+
+msgid "parts.description"
+msgstr "תיאור"
+
+msgid "parts.price"
+msgstr "מחיר"
+
+msgid "parts.in_stock"
+msgstr "במלאי"
+
+msgid "parts.status"
+msgstr "סטטוס"
+
+msgid "parts.actions"
+msgstr "פעולות"
+
+msgid "parts.active"
+msgstr "פעיל"
+
+msgid "parts.inactive"
+msgstr "לא פעיל"
+
+msgid "parts.sort_order"
+msgstr "סדר מיון"
+
+# Форма запчасти
+msgid "form.names_in_languages"
+msgstr "🌍 שמות בשלוש שפות"
+
+msgid "form.name_russian"
+msgstr "שם ברוסית *"
+
+msgid "form.name_english"
+msgstr "שם באנגלית"
+
+msgid "form.name_hebrew"
+msgstr "שם בעברית"
+
+msgid "form.descriptions"
+msgstr "📝 תיאורים (אופציונלי)"
+
+msgid "form.description_russian"
+msgstr "תיאור ברוסית"
+
+msgid "form.description_english"
+msgstr "תיאור באנגלית"
+
+msgid "form.description_hebrew"
+msgstr "תיאור בעברית"
+
+msgid "form.settings"
+msgstr "⚙️ הגדרות"
+
+msgid "form.category_required"
+msgstr "קטגוריה *"
+
+msgid "form.select_category"
+msgstr "בחר קטגוריה"
+
+# Статистика
+msgid "stats.total_categories"
+msgstr "קטגוריות"
+
+msgid "stats.total_parts"
+msgstr "סה\"כ חלקים"
+
+msgid "stats.active_parts"
+msgstr "פעילים"
+
+# Сообщения
+msgid "msg.part_added"
+msgstr "החלק נוסף"
+
+msgid "msg.part_updated"
+msgstr "החלק עודכן"
+
+msgid "msg.part_deleted"
+msgstr "החלק נמחק"
+
+msgid "msg.category_added"
+msgstr "הקטגוריה נוספה"
+
+msgid "msg.category_updated"
+msgstr "הקטגוריה עודכנה"
+
+msgid "msg.category_deleted"
+msgstr "הקטגוריה נמחקה"
+
+msgid "msg.confirm_delete"
+msgstr "האם אתה בטוח שברצונך למחוק?"
+
+msgid "msg.error_loading"
+msgstr "שגיאה בטעינת נתונים"
+
+msgid "msg.error_saving"
+msgstr "שגיאה בשמירת נתונים"
+
+# Фильтры
+msgid "filter.search"
+msgstr "חיפוש"
+
+msgid "filter.category"
+msgstr "קטגוריה"
+
+msgid "filter.status"
+msgstr "סטטוס"
+
+msgid "filter.all"
+msgstr "הכל"
+
+msgid "filter.all_categories"
+msgstr "כל הקטגוריות"
+
+# Пустое состояние
+msgid "empty.no_parts"
+msgstr "לא נמצאו חלקים"
+
+msgid "empty.no_categories"
+msgstr "אין קטגוריות"
+
+msgid "empty.try_different_filters"
+msgstr "נסה לשנות את המסננים"
+
+# מפתחות חדשים עבור admin/parts.html
+msgid "parts_management"
+msgstr "ניהול חלפים"
+
+msgid "back"
+msgstr "חזור"
+
+msgid "import_catalog"
+msgstr "ייבוא"
+
+msgid "add_category"
+msgstr "קטגוריה"
+
+msgid "add_part"
+msgstr "חלק"
+
+msgid "total_categories"
+msgstr "קטגוריות"
+
+msgid "total_parts"
+msgstr "סה\"כ חלפים"
+
+msgid "active_parts"
+msgstr "פעילים"
+
+msgid "parts"
+msgstr "חלפים"
+
+msgid "categories"
+msgstr "קטגוריות"
+
+msgid "search"
+msgstr "חיפוש"
+
+msgid "search_placeholder"
+msgstr "שם החלק..."
+
+msgid "category"
+msgstr "קטגוריה"
+
+msgid "all_categories"
+msgstr "כל הקטגוריות"
+
+msgid "status"
+msgstr "סטטוס"
+
+msgid "all_parts"
+msgstr "הכל"
+
+msgid "active_only"
+msgstr "פעילים"
+
+msgid "inactive_only"
+msgstr "לא פעילים"
+
+msgid "add_category_title"
+msgstr "הוסף קטגוריה"
+
+msgid "category_name"
+msgstr "שם"
+
+msgid "category_name_placeholder"
+msgstr "דוגמה: בלמים"
+
+msgid "sort_order"
+msgstr "סדר מיון"
+
+msgid "is_active"
+msgstr "פעיל"
+
+msgid "cancel"
+msgstr "ביטול"
+
+msgid "add"
+msgstr "הוסף"
+
+msgid "save"
+msgstr "שמור"
+
+msgid "add_part_title"
+msgstr "הוסף חלק"
+
+msgid "names_in_languages"
+msgstr "שמות בשלוש שפות"
+
+msgid "part_name_ru"
+msgstr "שם ברוסית"
+
+msgid "part_name_ru_placeholder"
+msgstr "Например: Передние колодки"
+
+msgid "part_name_en"
+msgstr "שם באנגלית"
+
+msgid "part_name_en_placeholder"
+msgstr "Example: Front brake pads"
+
+msgid "part_name_he"
+msgstr "שם בעברית"
+
+msgid "part_name_he_placeholder"
+msgstr "דוגמה: רפידות בלם קדמיות"
+
+msgid "descriptions_optional"
+msgstr "תיאורים (אופציונלי)"
+
+msgid "part_desc_ru"
+msgstr "תיאור ברוסית"
+
+msgid "part_desc_placeholder"
+msgstr "מידע נוסף..."
+
+msgid "part_desc_en"
+msgstr "תיאור באנגלית"
+
+msgid "part_desc_en_placeholder"
+msgstr "Additional information..."
+
+msgid "part_desc_he"
+msgstr "תיאור בעברית"
+
+msgid "part_desc_he_placeholder"
+msgstr "מידע נוסף..."
+
+msgid "settings"
+msgstr "הגדרות"
+
+msgid "part_category"
+msgstr "קטגוריה"
+
+msgid "choose_category"
+msgstr "בחר קטגוריה"
+
+# תרגומים עבור Admin.html
+msgid "admin_panel"
+msgstr "פאנל ניהול"
+
+msgid "admin_panel_title"
+msgstr "פאנל ניהול Felix Hub"
+
+msgid "home"
+msgstr "בית"
+
+msgid "logout"
+msgstr "התנתק"
+
+msgid "orders"
+msgstr "הזמנות"
+
+msgid "mechanics"
+msgstr "מכונאים"
+
+msgid "total_orders"
+msgstr "סה\"כ הזמנות"
+
+msgid "new_orders"
+msgstr "חדשות"
+
+msgid "in_progress"
+msgstr "בעבודה"
+
+msgid "ready"
+msgstr "מוכן"
+
+msgid "today_orders"
+msgstr "היום"
+
+msgid "all"
+msgstr "הכל"
+
+msgid "new"
+msgstr "חדש"
+
+msgid "cancelled"
+msgstr "מבוטלות"
+
+msgid "plate_number"
+msgstr "מספר רישוי"
+
+msgid "mechanic"
+msgstr "מכונאי"
+
+msgid "mechanic_name"
+msgstr "שם מכונאי"
+
+msgid "refresh"
+msgstr "רענן"
+
+msgid "orders_list"
+msgstr "רשימת הזמנות"
+
+msgid "loading"
+msgstr "טוען נתונים..."
+
+msgid "no_orders_found"
+msgstr "לא נמצאו הזמנות"
+
+msgid "error_loading_data"
+msgstr "שגיאה בטעינת נתונים"
+
+msgid "order_id"
+msgstr "מזהה"
+
+msgid "car_number"
+msgstr "מספר רישוי"
+
+msgid "details"
+msgstr "פרטים"
+
+msgid "date"
+msgstr "תאריך"
+
+msgid "actions"
+msgstr "פעולות"
+
+msgid "original"
+msgstr "מקורי"
+
+msgid "analog"
+msgstr "תחליף"
+
+msgid "part_orig"
+msgstr "מקורי"
+
+msgid "part_analog"
+msgstr "תחליפי"
+
+msgid "print"
+msgstr "הדפס"
+
+msgid "delete"
+msgstr "מחק"
+
+msgid "confirm_delete_order"
+msgstr "האם אתה בטוח שברצונך למחוק הזמנה"
+
+msgid "order_marked_ready"
+msgstr "ההזמנה סומנה כמוכנה. המכונאי יקבל התראה."
+
+msgid "error_updating_status"
+msgstr "שגיאה בעדכון סטטוס"
+
+msgid "print_sent"
+msgstr "קבלה נשלחה להדפסה"
+
+msgid "error_printing"
+msgstr "שגיאה בהדפסה"
+
+msgid "order_deleted"
+msgstr "ההזמנה נמחקה"
+
+msgid "error_deleting"
+msgstr "שגיאה במחיקה"
+
+# Mechanic interface translations
+msgid "mechanic_login"
+msgstr "כניסת מכונאים"
+
+msgid "username"
+msgstr "שם משתמש"
+
+msgid "enter_username"
+msgstr "הזן את שם המשתמש שלך"
+
+msgid "password"
+msgstr "סיסמה"
+
+msgid "enter_password"
+msgstr "הזן את הסיסמה שלך"
+
+msgid "remember_me"
+msgstr "זכור אותי"
+
+msgid "login"
+msgstr "התחבר"
+
+msgid "or"
+msgstr "או"
+
+msgid "back_to_home"
+msgstr "חזרה לדף הבית"
+
+msgid "dashboard"
+msgstr "לוח בקרה"
+
+msgid "hello"
+msgstr "שלום"
+
+msgid "my_orders"
+msgstr "ההזמנות שלי"
+
+msgid "new_order"
+msgstr "הזמנה חדשה"
+
+msgid "profile"
+msgstr "פרופיל"
+
+msgid "status_new"
+msgstr "חדש"
+
+msgid "status_in_progress"
+msgstr "בעבודה"
+
+msgid "status_ready"
+msgstr "מוכן"
+
+msgid "status_delivered"
+msgstr "נמסר"
+
+msgid "status_cancelled"
+msgstr "בוטל"
+
+msgid "recent_orders"
+msgstr "הזמנות אחרונות"
+
+msgid "order"
+msgstr "הזמנה"
+
+msgid "view_all_orders"
+msgstr "צפה בכל ההזמנות"
+
+msgid "no_orders_yet"
+msgstr "אין הזמנות עדיין"
+
+msgid "create_first_order"
+msgstr "צור את ההזמנה הראשונה שלך!"
+
+msgid "back_to_dashboard"
+msgstr "חזרה ללוח הבקרה"
+
+msgid "fill_order_form"
+msgstr "מלא את הטופס ליצירת הזמנה"
+
+msgid "parts_category"
+msgstr "קטגוריית חלפים"
+
+msgid "select_category"
+msgstr "בחר קטגוריה"
+
+msgid "select_parts_from_list"
+msgstr "בחר חלפים מהרשימה"
+
+msgid "select_category_first"
+msgstr "תחילה בחר קטגוריה"
+
+msgid "or_add_manually"
+msgstr "או הוסף ידנית"
+
+msgid "add_part"
+msgstr "הוסף חלק"
+
+msgid "parts_type"
+msgstr "סוג חלפים"
+
+msgid "comment"
+msgstr "הערה"
+
+msgid "optional"
+msgstr "אופציונלי"
+
+msgid "additional_info"
+msgstr "מידע נוסף"
+
+msgid "create_order"
+msgstr "צור הזמנה"
+
+msgid "part_name"
+msgstr "שם החלק"
+
+msgid "error_loading_catalog"
+msgstr "שגיאה בטעינת הקטלוג"
+
+msgid "select_at_least_one_part"
+msgstr "בחר לפחות חלק אחד!"
+
+msgid "successfully_created"
+msgstr "נוצר בהצלחה"
+
+msgid "error"
+msgstr "שגיאה"
+
+msgid "submission_error"
+msgstr "שגיאת שליחה"
+
+msgid "all_statuses"
+msgstr "כל הסטטוסים"
+
+msgid "search_by_plate"
+msgstr "חיפוש לפי מספר רישוי"
+
+msgid "apply"
+msgstr "החל"
+
+msgid "found"
+msgstr "נמצא"
+
+msgid "type"
+msgstr "סוג"
+
+msgid "created"
+msgstr "נוצר"
+
+msgid "try_different_filters"
+msgstr "נסה מסננים שונים או צור הזמנה חדשה"
+
+msgid "my_profile"
+msgstr "הפרופיל שלי"
+
+msgid "personal_info"
+msgstr "מידע אישי"
+
+msgid "full_name"
+msgstr "שם מלא"
+
+msgid "telegram_id_hint"
+msgstr "לקבלת התראות על הזמנות מוכנות"
+
+msgid "phone"
+msgstr "טלפון"
+
+msgid "save_changes"
+msgstr "שמור שינויים"
+
+msgid "orders_status_board"
+msgstr "סטטוס הזמנות"
+
+msgid "auto_refresh_30s"
+msgstr "רענון אוטומטי: 30 שניות"
+
+msgid "order_contents"
+msgstr "תכולת ההזמנה"
+
+msgid "change_password"
+msgstr "שינוי סיסמה"
+
+msgid "password_hint"
+msgstr "הסיסמה חייבת להיות לפחות 6 תווים"
+
+msgid "current_password"
+msgstr "סיסמה נוכחית"
+
+msgid "new_password"
+msgstr "סיסמה חדשה"
+
+msgid "confirm_new_password"
+msgstr "אשר סיסמה חדשה"
+
+msgid "profile_updated"
+msgstr "הפרופיל עודכן בהצלחה"
+
+msgid "passwords_dont_match"
+msgstr "הסיסמאות אינן תואמות"
+
+msgid "password_changed"
+msgstr "הסיסמה שונתה בהצלחה"
+
+msgid "telegram_notifications"
+msgstr "התראות טלגרם"
+
+msgid "telegram_id_not_set"
+msgstr "מזהה טלגרם לא הוגדר. הגדר אותו ב"
+
+msgid "to_receive_notifications"
+msgstr "כדי לקבל התראות."
+
+msgid "order_ready"
+msgstr "הזמנה מוכנה"
+
+msgid "notify_when_ready"
+msgstr "התראה כאשר ההזמנה מוכנה לאיסוף"
+
+msgid "order_in_progress"
+msgstr "הזמנה בעבודה"
+
+msgid "notify_when_processing"
+msgstr "התראה כאשר ההזמנה בטיפול"
+
+msgid "order_cancelled"
+msgstr "הזמנה בוטלה"
+
+msgid "notify_when_cancelled"
+msgstr "התראה כאשר ההזמנה בוטלה"
+
+msgid "save_settings"
+msgstr "שמור הגדרות"
+
+msgid "settings_saved"
+msgstr "ההגדרות נשמרו בהצלחה"
+
+# Admin panel translations
+msgid "admin_login"
+msgstr "כניסת מנהל"
+
+msgid "admin_panel"
+msgstr "פאנל ניהול"
+
+msgid "enter_admin_password"
+msgstr "הזן סיסמה להתחברות"
+
+msgid "manage_mechanics"
+msgstr "ניהול מכונאים"
+
+msgid "add_mechanic"
+msgstr "הוסף מכונאי"
+
+msgid "edit_mechanic"
+msgstr "ערוך מכונאי"
+
+msgid "mechanic_list"
+msgstr "רשימת מכונאים"
+
+msgid "total"
+msgstr "סה\"כ"
+
+msgid "active_plural"
+msgstr "פעילים"
+
+msgid "inactive_plural"
+msgstr "לא פעילים"
+
+msgid "loading"
+msgstr "טוען..."
+
+msgid "no_mechanics_yet"
+msgstr "אין מכונאים עדיין"
+
+msgid "mechanic_id"
+msgstr "מזהה"
+
+msgid "actions"
+msgstr "פעולות"
+
+msgid "deactivate"
+msgstr "השבת"
+
+msgid "activate"
+msgstr "הפעל"
+
+msgid "active"
+msgstr "פעיל"
+
+msgid "inactive"
+msgstr "לא פעיל"
+
+msgid "password_required_on_create"
+msgstr "סיסמה נדרשת ביצירה"
+
+msgid "min_6_chars"
+msgstr "לפחות 6 תווים"
+
+msgid "leave_empty_to_keep"
+msgstr "השאר ריק בעריכה כדי לשמור על הסיסמה הנוכחית."
+
+msgid "notify_on_order_ready"
+msgstr "התראה כאשר ההזמנה מוכנה"
+
+msgid "mechanic_created"
+msgstr "מכונאי נוצר"
+
+msgid "mechanic_updated"
+msgstr "מכונאי עודכן"
+
+msgid "mechanic_activated"
+msgstr "מכונאי הופעל"
+
+msgid "mechanic_deactivated"
+msgstr "מכונאי הושבת"
+
+msgid "error_loading_data"
+msgstr "שגיאה בטעינת נתונים"
+
+
+# Login Form
+msgid "Система управления заказами СТО"
+msgstr "מערכת ניהול הזמנות מוסך"
+
+msgid "Имя пользователя"
+msgstr "שם משתמש"
+
+msgid "Введите имя пользователя"
+msgstr "הזן שם משתמש"
+
+msgid "Пароль"
+msgstr "סיסמה"
+
+msgid "Введите пароль"
+msgstr "הזן סיסמה"
+
+msgid "Войти"
+msgstr "התחבר"
+
+msgid "Панель администратора"
+msgstr "פאנל מנהל"
+
+msgid "Создать заказ"
+msgstr "צור הזמנה"
+
+# Flash messages
+msgid "Ваш аккаунт деактивирован. Обратитесь к администратору"
+msgstr "החשבון שלך מושבת. אנא פנה למנהל"
+
+msgid "Добро пожаловать, %(name)s!"
+msgstr "!שלום, %(name)s"
+
+msgid "Неверное имя пользователя или пароль"
+msgstr "שם משתמש או סיסמה לא נכונים"
+
+msgid "part_already_added"
+msgstr "החלק כבר ברשימה"
+
+msgid "cancel_order"
+msgstr "בטל הזמנה"
+
+msgid "additives"
+msgstr "תוספים"
+
+msgid "with_additives"
+msgstr "עם תוספים"
+
+msgid "without_additives"
+msgstr "ללא תוספים"
+
+msgid "no_additives"
+msgstr "ללא תוספים"

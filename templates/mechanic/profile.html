@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="{{ g.locale or 'ru' }}" dir="{{ 'rtl' if g.locale == 'he' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Felix Hub - Профиль механика">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>{{ _('profile') }} - Felix Hub</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/language-switcher.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fixed-header-nav.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            margin: 0;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .page-header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .page-header h1 {
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        .btn-logout {
+            background: white;
+            color: #667eea;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+        }
+
+        /* Стили навигации перенесены в fixed-nav.css */
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group input:disabled {
+            background: #f9fafb;
+            cursor: not-allowed;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #047857;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .info-box {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #3b82f6;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: #1e40af;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.3em;
+            }
+            
+            .header-actions {
+                gap: 10px;
+            }
+            
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1>👤 {{ _('my_profile') if _('my_profile') != 'my_profile' else 'Мой профиль' }} - {{ current_user.full_name }}</h1>
+            <div class="header-actions">
+                <!-- Переключатель языка -->
+                <div class="language-switcher">
+                    <div class="lang-buttons">
+                        <a href="/set_language/ru?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'ru' else '' }}" 
+                           title="Русский"><img src="{{ url_for('static', filename='Icons/rus.svg') }}" alt="Русский"></a>
+                        <a href="/set_language/en?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'en' else '' }}" 
+                           title="English"><img src="{{ url_for('static', filename='Icons/gb.svg') }}" alt="English"></a>
+                        <a href="/set_language/he?redirect={{ request.path }}" 
+                           class="lang-btn {{ 'active' if g.locale == 'he' else '' }}" 
+                           title="עברית"><img src="{{ url_for('static', filename='Icons/israel.svg') }}" alt="עברית"></a>
+                    </div>
+                </div>
+                <a href="{{ url_for('mechanic_logout') }}" class="btn-logout">{{ _('logout') }}</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-wrapper">
+        <div class="nav-container">
+            <div class="nav">
+                <a href="{{ url_for('mechanic_dashboard') }}">{{ _('home') }}</a>
+                <a href="{{ url_for('mechanic_orders') }}">{{ _('my_orders') }}</a>
+                <a href="{{ url_for('mechanic_new_order') }}">{{ _('new_order') }}</a>
+                <a href="{{ url_for('mechanic_profile') }}" class="active">{{ _('profile') }}</a>
+                <a href="{{ url_for('mechanic_settings') }}">{{ _('settings') }}</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+
+        <div class="card">
+            <h2>{{ _('personal_info') }}</h2>
+            
+            <div id="profileAlert"></div>
+
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="username">{{ _('username') }}</label>
+                    <input type="text" 
+                           id="username" 
+                           value="{{ current_user.username }}" 
+                           disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name">{{ _('full_name') }} *</label>
+                    <input type="text" 
+                           id="full_name" 
+                           name="full_name"
+                           value="{{ current_user.full_name }}" 
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="telegram_id">Telegram ID</label>
+                    <input type="text" 
+                           id="telegram_id" 
+                           name="telegram_id"
+                           value="{{ current_user.telegram_id or '' }}"
+                           placeholder="1234567890">
+                    <small style="color: #666; font-size: 13px;">{{ _('telegram_id_hint') }}</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">{{ _('phone') }}</label>
+                    <input type="text" 
+                           id="phone" 
+                           name="phone"
+                           value="{{ current_user.phone or '' }}"
+                           placeholder="+79001234567">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" 
+                           id="email" 
+                           name="email"
+                           value="{{ current_user.email or '' }}"
+                           placeholder="email@example.com">
+                </div>
+
+                <button type="submit" class="btn btn-primary">{{ _('save_changes') }}</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>{{ _('change_password') }}</h2>
+            
+            <div id="passwordAlert"></div>
+
+            <div class="info-box">
+                <p>💡 {{ _('password_hint') }}</p>
+            </div>
+
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label for="old_password">{{ _('current_password') }} *</label>
+                    <input type="password" 
+                           id="old_password" 
+                           name="old_password"
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password">{{ _('new_password') }} *</label>
+                    <input type="password" 
+                           id="new_password" 
+                           name="new_password"
+                           required
+                           minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">{{ _('confirm_new_password') }} *</label>
+                    <input type="password" 
+                           id="confirm_password" 
+                           name="confirm_password"
+                           required
+                           minlength="6">
+                </div>
+
+                <button type="submit" class="btn btn-primary">{{ _('change_password') }}</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Обновление профиля
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const alertContainer = document.getElementById('profileAlert');
+            const formData = {
+                full_name: document.getElementById('full_name').value,
+                telegram_id: document.getElementById('telegram_id').value || null,
+                phone: document.getElementById('phone').value || null,
+                email: document.getElementById('email').value || null
+            };
+
+            try {
+                const response = await fetch('/api/mechanic/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ {{ _('profile_updated') }}!
+                        </div>
+                    `;
+                } else {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-error">
+                            ❌ {{ _('error') }}: ${result.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ {{ _('error') }}: ${error.message}
+                    </div>
+                `;
+            }
+        });
+
+        // Смена пароля
+        document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const alertContainer = document.getElementById('passwordAlert');
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+
+            if (newPassword !== confirmPassword) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ {{ _('passwords_dont_match') }}!
+                    </div>
+                `;
+                return;
+            }
+
+            const formData = {
+                old_password: document.getElementById('old_password').value,
+                new_password: newPassword
+            };
+
+            try {
+                const response = await fetch('/api/mechanic/password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-success">
+                            ✅ {{ _('password_changed') }}!
+                        </div>
+                    `;
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-error">
+                            ❌ {{ _('error') }}: ${result.error}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-error">
+                        ❌ {{ _('error') }}: ${error.message}
+                    </div>
+                `;
+            }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mobile-enhancements.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nav-scroll.js') }}"></script>
+    <div style="text-align: center; padding: 18px 12px; color: #9ca3af; font-size: 12px;">Developed by Vorokhovskii Mikhail</div>
+</body>
+</html>
