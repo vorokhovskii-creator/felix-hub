@@ -400,31 +400,29 @@
             }
         }
 
-        /* ── Поиск запчастей ── */
+         /* ── Поиск запчастей ── */
         .parts-search-wrapper {
             position: relative;
-            margin-bottom: 10px;
-        }
-        .parts-search-wrapper {
-            position: relative;
+            margin-bottom: 8px;
         }
         .parts-search-icon {
             position: absolute;
-            left: 11px;
+            left: 10px;
             top: 50%;
             transform: translateY(-50%);
-            width: 16px;
-            height: 16px;
+            width: 15px;
+            height: 15px;
             pointer-events: none;
-            color: #999;
+            color: #aaa;
+            display: block;
         }
         [dir="rtl"] .parts-search-icon {
             left: auto;
-            right: 11px;
+            right: 10px;
         }
         .parts-search-input {
             width: 100%;
-            padding: 9px 14px 9px 34px;
+            padding: 9px 12px 9px 32px;
             border: 1px solid #ccc;
             border-radius: 6px;
             font-size: 14px;
@@ -432,7 +430,8 @@
             background: #fff;
         }
         [dir="rtl"] .parts-search-input {
-            padding: 9px 34px 9px 14px;
+            padding: 9px 32px 9px 12px;
+            text-align: right;
         }
         .parts-search-input:focus {
             outline: none;
@@ -485,12 +484,11 @@
             text-align: center;
         }
 
-        /* Выбранные детали — чипы */
         .selected-parts-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
+            gap: 4px;
+            margin-top: 6px;
             min-height: 0;
         }
         .selected-parts-chips:empty {
@@ -499,21 +497,22 @@
         .selected-part-chip {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            background: #eef0ff;
-            border: 1px solid #c5c9f5;
-            color: #3c3f8f;
-            border-radius: 20px;
-            padding: 4px 10px 4px 10px;
-            font-size: 13px;
-            font-weight: 500;
+            gap: 3px;
+            background: #f0f1fb;
+            border: 1px solid #d0d3f0;
+            color: #4a4e9a;
+            border-radius: 4px;
+            padding: 2px 6px 2px 7px;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.4;
         }
         .selected-part-chip .chip-remove {
             cursor: pointer;
-            font-size: 15px;
+            font-size: 13px;
             line-height: 1;
-            color: #888;
-            margin-left: 2px;
+            color: #aaa;
+            margin-left: 1px;
             border: none;
             background: none;
             padding: 0;
