@@ -549,28 +549,38 @@ def _send_to_thermal_printer(text):
     raise RuntimeError(f'Неизвестный THERMAL_PRINT_BACKEND={backend}')
 
 def print_receipt(order):
-    """Печать чека (симуляция - можно заменить на реальную печать)"""
+    """Печать чека на иврите"""
     category_name = order.category
     category_obj = Category.query.filter_by(name=order.category).first()
     if category_obj:
-        category_name = category_obj.get_name('ru')
+        category_name = category_obj.get_name('he') or category_obj.get_name('ru') or order.category
+
+    # Hebrew status mapping
+    status_he = {
+        'новый': 'חדש',
+        'в работе': 'בעבודה',
+        'готово': 'מוכן',
+    }
+    status_label = status_he.get(order.status, order.status)
 
     width_raw = os.getenv('THERMAL_PRINTER_LINE_WIDTH', '').strip()
     width = int(width_raw) if width_raw.isdigit() and int(width_raw) > 0 else 40
     sep = '=' * width
 
+    order_type_he = 'מקורי' if order.is_original else 'תחליפי'
+
     lines = [
         sep,
-        'СТО Felix',
+        'פליקס - מוסך',
         sep,
-        f'Заказ №{order.id}',
-        f'Механик: {order.mechanic_name}',
-        f'Гос номер: {order.plate_number}',
-        f'Категория: {category_name}',
-        f"Тип: {'Оригинал' if order.is_original else 'Аналог'}",
-        f'Создан: {_format_dt(order.created_at)}',
+        f'הזמנה מספר: {order.id}',
+        f'מכונאי: {order.mechanic_name}',
+        f'מספר רכב: {order.plate_number}',
+        f'קטגוריה: {category_name}',
+        f'סוג: {order_type_he}',
+        f'נוצר: {_format_dt(order.created_at)}',
         sep,
-        'Состав заказа:',
+        'הרכב של ההזמנה:',
     ]
 
     no_additives_aliases_cf = {
@@ -588,29 +598,29 @@ def print_receipt(order):
 
             if part_id:
                 part_obj = Part.query.get(part_id)
-                name = part_obj.get_name('ru') if part_obj else (part.get('name', '') or '')
+                name = (part_obj.get_name('he') or part_obj.get_name('ru')) if part_obj else (part.get('name', '') or '')
             else:
                 name = (part.get('name', '') or '')
                 if isinstance(name, str) and (name.strip() == 'no_additives' or name.strip().casefold() in no_additives_aliases_cf):
-                    name = 'БЕЗ ПРИСАДОК'
+                    name = 'ללא תוספים'
 
             qty_suffix = f' (x{quantity})' if isinstance(quantity, int) and quantity > 1 else ''
             lines.append(f'- {name}{qty_suffix}'.strip())
         else:
             part_text = part
             if isinstance(part_text, str) and (part_text.strip() == 'no_additives' or part_text.strip().casefold() in no_additives_aliases_cf):
-                part_text = 'БЕЗ ПРИСАДОК'
+                part_text = 'ללא תוספים'
             lines.append(f'- {part_text}')
 
     if order.comment:
         lines.append(sep)
-        lines.append('Комментарий:')
+        lines.append('הערה:')
         for chunk in textwrap.wrap(str(order.comment), width=width):
             lines.append(chunk)
 
     lines += [
         sep,
-        f'Статус: {order.status}',
+        f'סטטוס: {status_label}',
         sep,
     ]
 
