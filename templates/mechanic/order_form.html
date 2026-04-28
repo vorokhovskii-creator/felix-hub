@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="/static/manifest.json">
     <title>{{ _('new_order') }} - Felix Hub</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-responsive.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/language-switcher.css') }}">
@@ -531,6 +532,11 @@
             color: #e53935;
         }
     </style>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/sw.js');
+      }
+    </script>
 </head>
 <body>
     
