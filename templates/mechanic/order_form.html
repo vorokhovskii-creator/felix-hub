@@ -431,20 +431,16 @@
         /* ── Поиск запчастей ── */
         .parts-search-wrapper {
             position: relative;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .parts-search-input {
             width: 100%;
-            padding: 9px 14px 9px 36px;
+            padding: 9px 12px;
             border: 1px solid #ccc;
             border-radius: 6px;
             font-size: 14px;
             box-sizing: border-box;
-            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
-        }
-        [dir="rtl"] .parts-search-input {
-            padding: 9px 36px 9px 14px;
-            background-position: calc(100% - 10px) center;
+            background: #fff;
         }
         .parts-search-input:focus {
             outline: none;
@@ -495,6 +491,44 @@
             color: #999;
             font-size: 14px;
             text-align: center;
+        }
+
+        /* Выбранные детали — чипы */
+        .selected-parts-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+            min-height: 0;
+        }
+        .selected-parts-chips:empty {
+            display: none;
+        }
+        .selected-part-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #f0f1fb;
+            border: 1px solid #d0d3f0;
+            color: #4a4e9a;
+            border-radius: 4px;
+            padding: 2px 6px 2px 7px;
+            font-size: 12px;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+        .selected-part-chip .chip-remove {
+            cursor: pointer;
+            font-size: 13px;
+            line-height: 1;
+            color: #aaa;
+            margin-left: 1px;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+        .selected-part-chip .chip-remove:hover {
+            color: #e53935;
         }
     </style>
 </head>
@@ -566,6 +600,7 @@
                            autocomplete="off">
                     <div id="partsSearchDropdown" class="parts-search-dropdown" style="display:none;"></div>
                 </div>
+                <div id="selectedPartsChips" class="selected-parts-chips"></div>
                 <div id="partsList" class="checkbox-group">
                     <p style="color: #999; font-size: 14px;">{{ _('select_category_first') }}</p>
                 </div>
@@ -1050,6 +1085,38 @@
                 const manualCount = document.querySelectorAll('.manual-part-input').length;
                 const total = Object.keys(selectedPartsGlobal).length + manualCount;
                 counter.textContent = '{{ _("selected") if _("selected") != "selected" else "Выбрано" }}: ' + total;
+            }
+            renderSelectedChips();
+        }
+
+        // Чипы выбранных деталей (под строкой поиска)
+        function renderSelectedChips() {
+            const container = document.getElementById('selectedPartsChips');
+            if (!container) return;
+            container.innerHTML = '';
+            for (const key in selectedPartsGlobal) {
+                const part = selectedPartsGlobal[key];
+                const chip = document.createElement('span');
+                chip.className = 'selected-part-chip';
+                chip.textContent = part.name || key;
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'chip-remove';
+                removeBtn.textContent = '×';
+                removeBtn.title = 'Remove';
+                removeBtn.addEventListener('click', function() {
+                    // Снять чекбокс если есть
+                    const cb = document.querySelector(
+                        'input[type="checkbox"][data-part-id="' + key + '"], ' +
+                        'input[type="checkbox"][value="' + key + '"]'
+                    );
+                    if (cb && cb.checked) cb.click();
+                    else {
+                        delete selectedPartsGlobal[key];
+                        updatePartsCounter();
+                    }
+                });
+                chip.appendChild(removeBtn);
+                container.appendChild(chip);
             }
         }
         
