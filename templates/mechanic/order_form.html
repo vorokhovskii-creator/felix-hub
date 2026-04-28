@@ -464,10 +464,11 @@
         .parts-search-item {
             display: flex;
             align-items: center;
-            padding: 8px 12px;
+            padding: 6px 12px;
             cursor: pointer;
             gap: 8px;
             transition: background 0.1s;
+            min-height: 36px;
         }
         .parts-search-item:hover { background: #f5f5f5; }
         .parts-search-item.selected { background: #e8f4fd; }
@@ -493,6 +494,63 @@
             font-size: 14px;
             text-align: center;
         }
+        /* Контролы qty и О/А внутри строки дропдауна */
+        .item-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        .item-qty {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .item-qty-btn {
+            width: 18px;
+            height: 18px;
+            border: 1px solid #b0b4dc;
+            border-radius: 3px;
+            background: #fff;
+            color: #4a4e9a;
+            font-size: 13px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .item-qty-btn:hover { background: #e0e2f5; }
+        .item-qty-val {
+            min-width: 16px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: #333;
+        }
+        .item-type {
+            display: inline-flex;
+            border: 1px solid #b0b4dc;
+            border-radius: 3px;
+            overflow: hidden;
+            font-size: 11px;
+        }
+        .item-type-btn {
+            padding: 1px 6px;
+            cursor: pointer;
+            background: #fff;
+            color: #888;
+            border: none;
+            line-height: 1.5;
+            transition: background 0.1s, color 0.1s;
+        }
+        .item-type-btn.active {
+            background: #667eea;
+            color: #fff;
+        }
+        .item-type-btn:not(.active):hover { background: #e8eafc; }
 
         /* Выбранные детали — чипы */
         .selected-parts-chips {
@@ -942,6 +1000,9 @@
                     matches.forEach(part => {
                         const key = getPartKey(part);
                         const isSelected = selectedPartsGlobal.hasOwnProperty(key);
+                        const savedQty = isSelected ? (selectedPartsGlobal[key].quantity || 1) : 1;
+                        const savedOrig = isSelected ? (selectedPartsGlobal[key].is_original !== false) : true;
+
                         const item = document.createElement('div');
                         item.className = 'parts-search-item' + (isSelected ? ' selected' : '');
                         item.dataset.key = key;
@@ -954,17 +1015,65 @@
                         nameSpan.className = 'parts-search-name';
                         nameSpan.textContent = part.name;
 
+                        const controls = document.createElement('span');
+                        controls.className = 'item-controls';
+                        controls.innerHTML = `
+                            <span class="item-qty">
+                                <button type="button" class="item-qty-btn item-minus">−</button>
+                                <span class="item-qty-val">${savedQty}</span>
+                                <button type="button" class="item-qty-btn item-plus">+</button>
+                            </span>
+                            <span class="item-type">
+                                <button type="button" class="item-type-btn item-orig${savedOrig ? ' active' : ''}">О</button>
+                                <button type="button" class="item-type-btn item-analog${!savedOrig ? ' active' : ''}">А</button>
+                            </span>`;
+
                         const catSpan = document.createElement('span');
                         catSpan.className = 'parts-search-category';
                         catSpan.textContent = part.category;
 
                         item.appendChild(check);
                         item.appendChild(nameSpan);
+                        item.appendChild(controls);
                         item.appendChild(catSpan);
 
                         item.addEventListener('mousedown', function(e) {
+                            if (e.target.closest('.item-controls')) return;
                             e.preventDefault();
-                            toggleSearchPart(part, item, check);
+                            const qty = parseInt(controls.querySelector('.item-qty-val').textContent) || 1;
+                            const isOrig = controls.querySelector('.item-orig').classList.contains('active');
+                            toggleSearchPart(part, item, check, qty, isOrig);
+                        });
+
+                        controls.querySelector('.item-minus').addEventListener('mousedown', e => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const valEl = controls.querySelector('.item-qty-val');
+                            let v = parseInt(valEl.textContent) || 1;
+                            if (v > 1) { v--; valEl.textContent = v; }
+                            if (selectedPartsGlobal[key]) { selectedPartsGlobal[key].quantity = v; renderSelectedChips(); }
+                        });
+                        controls.querySelector('.item-plus').addEventListener('mousedown', e => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const valEl = controls.querySelector('.item-qty-val');
+                            let v = parseInt(valEl.textContent) || 1;
+                            v++; valEl.textContent = v;
+                            if (selectedPartsGlobal[key]) { selectedPartsGlobal[key].quantity = v; renderSelectedChips(); }
+                        });
+                        controls.querySelector('.item-orig').addEventListener('mousedown', e => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            controls.querySelector('.item-orig').classList.add('active');
+                            controls.querySelector('.item-analog').classList.remove('active');
+                            if (selectedPartsGlobal[key]) { selectedPartsGlobal[key].is_original = true; renderSelectedChips(); }
+                        });
+                        controls.querySelector('.item-analog').addEventListener('mousedown', e => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            controls.querySelector('.item-analog').classList.add('active');
+                            controls.querySelector('.item-orig').classList.remove('active');
+                            if (selectedPartsGlobal[key]) { selectedPartsGlobal[key].is_original = false; renderSelectedChips(); }
                         });
 
                         dropdown.appendChild(item);
@@ -973,7 +1082,7 @@
                 dropdown.style.display = 'block';
             }
 
-            function toggleSearchPart(part, item, check) {
+            function toggleSearchPart(part, item, check, qty, isOrig) {
                 const key = getPartKey(part);
                 if (selectedPartsGlobal.hasOwnProperty(key)) {
                     delete selectedPartsGlobal[key];
@@ -981,12 +1090,11 @@
                     check.textContent = '';
                     unselectInPartsList(part);
                 } else {
-                    const globalIsOriginal = document.querySelector('input[name="is_original"]:checked').value === 'true';
                     selectedPartsGlobal[key] = {
                         name: part.name,
-                        quantity: 1,
+                        quantity: qty || 1,
                         part_id: part.id != null ? parseInt(part.id) : null,
-                        is_original: globalIsOriginal
+                        is_original: isOrig !== undefined ? isOrig : true
                     };
                     item.classList.add('selected');
                     check.textContent = '✓';
