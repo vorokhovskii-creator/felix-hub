@@ -1187,8 +1187,11 @@
   <title>הדפסת קבלה</title>
   <style>
     html,body{margin:0;padding:0;background:#fff;}
-    pre{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; line-height:1.25; white-space:pre-wrap; word-break:break-word; padding:12px; direction:rtl; text-align:right; unicode-bidi:plaintext;}
-    @media print { pre { font-size: 10px; } }
+    pre{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px; line-height:1.25; white-space:pre-wrap; word-break:break-word; padding:12px; direction:rtl; text-align:right; unicode-bidi:plaintext; max-width:100%; box-sizing:border-box;}
+    @media print {
+      html,body{width:210mm;}
+      pre { font-size: 10px; margin:0; padding:8mm; max-width:210mm; box-sizing:border-box; }
+    }
   </style>
 </head>
 <body>
