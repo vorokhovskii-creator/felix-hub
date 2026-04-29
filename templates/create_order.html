@@ -1239,13 +1239,27 @@
         
         // Применение глобального типа ко всем деталям
         function applyGlobalPartType(isOriginal) {
-            // Обновляем все видимые переключатели
+            // Обновляем все видимые переключатели (.part-type-toggle — блок под списком деталей)
             document.querySelectorAll('.part-type-toggle').forEach(toggle => {
                 toggle.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
                 if (isOriginal) {
                     toggle.querySelector('.type-btn.original').classList.add('active');
                 } else {
                     toggle.querySelector('.type-btn.analog').classList.add('active');
+                }
+            });
+
+            // Обновляем кнопки О/А в строках дропдауна (item-orig / item-analog)
+            document.querySelectorAll('.parts-search-item.selected .item-controls').forEach(controls => {
+                const origBtn   = controls.querySelector('.item-orig');
+                const analogBtn = controls.querySelector('.item-analog');
+                if (!origBtn || !analogBtn) return;
+                if (isOriginal) {
+                    origBtn.classList.add('active');
+                    analogBtn.classList.remove('active');
+                } else {
+                    analogBtn.classList.add('active');
+                    origBtn.classList.remove('active');
                 }
             });
             
