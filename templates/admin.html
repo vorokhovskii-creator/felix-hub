@@ -1308,6 +1308,75 @@
                 timeout = setTimeout(() => func.apply(this, args), wait);
             };
         }
+
+        // Система уведомлений для админа
+        let lastOrderId = 0;
+        let notificationsEnabled = false;
+
+        // Запросить разрешение на уведомления при загрузке страницы
+        if ('Notification' in window && Notification.permission === 'default') {
+            setTimeout(() => {
+                if (confirm('Включить уведомления о новых заказах?')) {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            notificationsEnabled = true;
+                            console.log('✅ Уведомления включены');
+                        }
+                    });
+                }
+            }, 2000);
+        } else if (Notification.permission === 'granted') {
+            notificationsEnabled = true;
+        }
+
+        // Проверка новых заказов каждые 30 секунд
+        async function checkNewOrders() {
+            if (!notificationsEnabled) return;
+
+            try {
+                const response = await fetch('/api/orders?limit=1');
+                const data = await response.json();
+
+                if (data.orders && data.orders.length > 0) {
+                    const latestOrder = data.orders[0];
+
+                    // Если это первая проверка, просто сохраняем ID
+                    if (lastOrderId === 0) {
+                        lastOrderId = latestOrder.id;
+                        return;
+                    }
+
+                    // Если появился новый заказ
+                    if (latestOrder.id > lastOrderId) {
+                        lastOrderId = latestOrder.id;
+
+                        // Показываем уведомление
+                        const notification = new Notification('🆕 Новый заказ!', {
+                            body: `Заказ №${latestOrder.id}\nМеханик: ${latestOrder.mechanic_name}\nГос номер: ${latestOrder.plate_number}`,
+                            icon: '/static/favicon.ico',
+                            tag: `new-order-${latestOrder.id}`,
+                            requireInteraction: true
+                        });
+
+                        notification.onclick = () => {
+                            window.focus();
+                            loadOrders();
+                            notification.close();
+                        };
+
+                        // Обновляем список заказов
+                        loadOrders();
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка проверки новых заказов:', error);
+            }
+        }
+
+        // Запускаем проверку каждые 30 секунд
+        setInterval(checkNewOrders, 30000);
+        // Первая проверка через 5 секунд после загрузки
+        setTimeout(checkNewOrders, 5000);
     </script>
     <script src="/static/js/language.js"></script>
     <script src="/static/js/language-switcher.js"></script>

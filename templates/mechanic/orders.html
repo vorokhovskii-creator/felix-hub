@@ -612,6 +612,75 @@
                 alert('❌ Ошибка добавления');
             }
         }
+
+        // Система уведомлений для механика
+        let mechanicOrderStatuses = {};
+        let notificationsEnabled = false;
+
+        // Запросить разрешение на уведомления при загрузке страницы
+        if ('Notification' in window && Notification.permission === 'default') {
+            setTimeout(() => {
+                if (confirm('Включить уведомления о готовности заказов?')) {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            notificationsEnabled = true;
+                            console.log('✅ Уведомления включены');
+                        }
+                    });
+                }
+            }, 2000);
+        } else if (Notification.permission === 'granted') {
+            notificationsEnabled = true;
+        }
+
+        // Проверка изменения статусов заказов каждые 30 секунд
+        async function checkOrderStatusChanges() {
+            if (!notificationsEnabled) return;
+
+            try {
+                const response = await fetch('/api/mechanic/orders');
+                const data = await response.json();
+
+                if (data.orders) {
+                    data.orders.forEach(order => {
+                        const oldStatus = mechanicOrderStatuses[order.id];
+
+                        // Если это первая проверка, просто сохраняем статус
+                        if (!oldStatus) {
+                            mechanicOrderStatuses[order.id] = order.status;
+                            return;
+                        }
+
+                        // Если статус изменился на "готово"
+                        if (oldStatus !== 'готово' && order.status === 'готово') {
+                            // Показываем уведомление
+                            const notification = new Notification('✅ Заказ готов!', {
+                                body: `Заказ №${order.id}\nГос номер: ${order.plate_number}\nМожете забирать запчасти`,
+                                icon: '/static/favicon.ico',
+                                tag: `ready-order-${order.id}`,
+                                requireInteraction: true
+                            });
+
+                            notification.onclick = () => {
+                                window.focus();
+                                location.reload();
+                                notification.close();
+                            };
+                        }
+
+                        // Обновляем сохраненный статус
+                        mechanicOrderStatuses[order.id] = order.status;
+                    });
+                }
+            } catch (error) {
+                console.error('Ошибка проверки статусов заказов:', error);
+            }
+        }
+
+        // Запускаем проверку каждые 30 секунд
+        setInterval(checkOrderStatusChanges, 30000);
+        // Первая проверка через 5 секунд после загрузки
+        setTimeout(checkOrderStatusChanges, 5000);
     </script>
     <div style="text-align: center; padding: 18px 12px; color: #9ca3af; font-size: 12px;">Developed by Vorokhovskii Mikhail</div>
 </body>
