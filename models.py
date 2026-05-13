@@ -280,6 +280,9 @@ class Order(db.Model):
     printed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Расчетное время готовности заказа (новое в v2.3)
+    estimated_ready_at = db.Column(db.DateTime, nullable=True)
     
     def to_dict(self, include_mechanic=False, lang=None):
         """Преобразовать в словарь для API"""

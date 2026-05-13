@@ -65,11 +65,18 @@ elif database_url.startswith('postgresql://'):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
-# Настройки SSL для PostgreSQL (Railway)
+# Настройки SSL для PostgreSQL
 if 'postgresql' in database_url:
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "connect_args": {"sslmode": "require"}
-    }
+    # Для продакшена (Railway, Render) требуется SSL
+    # Для локальной разработки SSL не требуется
+    if 'localhost' in database_url or '127.0.0.1' in database_url:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            "connect_args": {"sslmode": "disable"}
+        }
+    else:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+            "connect_args": {"sslmode": "require"}
+        }
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -1013,6 +1020,62 @@ def public_orders():
     )
 
 
+def calculate_estimated_ready_time():
+    """
+    Рассчитывает ожидаемое время готовности нового заказа на основе очереди активных заказов.
+
+    Логика:
+    - Базовое время обработки одного заказа: 10 минут (настраивается через ORDER_PROCESSING_TIME_MINUTES)
+    - Учитываются заказы со статусами 'новый' и 'в работе'
+    - Для каждого активного заказа рассчитывается оставшееся время
+    - Новый заказ добавляется в конец очереди
+
+    Returns:
+        dict: {
+            'estimated_minutes': int,  # Время ожидания в минутах
+            'estimated_ready_at': datetime,  # Точное время готовности
+            'queue_position': int,  # Позиция в очереди
+            'active_orders_count': int  # Количество активных заказов
+        }
+    """
+    # Базовое время обработки одного заказа (в минутах)
+    processing_time_minutes = int(os.getenv('ORDER_PROCESSING_TIME_MINUTES', '10'))
+
+    # Получаем все активные заказы (новый + в работе)
+    active_orders = Order.query.filter(
+        Order.status.in_(['новый', 'в работе'])
+    ).order_by(Order.created_at.asc()).all()
+
+    current_time = datetime.utcnow()
+    total_remaining_minutes = 0
+
+    # Рассчитываем оставшееся время для каждого активного заказа
+    for order in active_orders:
+        # Время с момента создания заказа
+        elapsed_time = current_time - order.created_at
+        elapsed_minutes = elapsed_time.total_seconds() / 60
+
+        # Оставшееся время для этого заказа
+        remaining_minutes = max(0, processing_time_minutes - elapsed_minutes)
+        total_remaining_minutes += remaining_minutes
+
+    # Добавляем время для нового заказа
+    total_remaining_minutes += processing_time_minutes
+
+    # Округляем до целых минут
+    estimated_minutes = int(round(total_remaining_minutes))
+
+    # Рассчитываем точное время готовности
+    estimated_ready_at = current_time + timedelta(minutes=estimated_minutes)
+
+    return {
+        'estimated_minutes': estimated_minutes,
+        'estimated_ready_at': estimated_ready_at,
+        'queue_position': len(active_orders) + 1,
+        'active_orders_count': len(active_orders)
+    }
+
+
 @app.route('/api/submit_order', methods=['POST'])
 def submit_order():
     """API для создания нового заказа"""
@@ -1146,7 +1209,10 @@ def submit_order():
                     'message': 'Заказ уже был создан',
                     'deduplicated': True
                 }), 200
-        
+
+        # Рассчитываем ожидаемое время готовности перед созданием заказа
+        ready_time_info = calculate_estimated_ready_time()
+
         # Создание нового заказа
         order = Order(
             mechanic_id=mechanic_id,
@@ -1158,7 +1224,8 @@ def submit_order():
             is_original=is_original_normalized,
             photo_url=data.get('photo_url'),
             comment=comment_normalized,
-            status='новый'
+            status='новый',
+            estimated_ready_at=ready_time_info['estimated_ready_at']  # Сохраняем расчетное время
         )
         
         db.session.add(order)
@@ -1166,16 +1233,95 @@ def submit_order():
         
         # Отправка уведомления администратору
         notify_admin_new_order(order)
-        
+
+        # Форматируем время готовности для ответа
+        tz = ZoneInfo(app.config['APP_TIMEZONE'])
+        ready_at_local = ready_time_info['estimated_ready_at'].replace(tzinfo=timezone.utc).astimezone(tz)
+
         return jsonify({
             'success': True,
             'order_id': order.id,
-            'message': 'Заказ успешно создан'
+            'message': 'Заказ успешно создан',
+            'estimated_ready': {
+                'minutes': ready_time_info['estimated_minutes'],
+                'ready_at': ready_at_local.strftime('%H:%M'),
+                'queue_position': ready_time_info['queue_position'],
+                'active_orders': ready_time_info['active_orders_count']
+            }
         }), 201
         
     except Exception as e:
         db.session.rollback()
         print(f"❌ Ошибка создания заказа: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/orders/queue', methods=['GET'])
+def get_orders_queue():
+    """
+    API для получения информации о текущей очереди заказов.
+    Полезно для мониторинга и отображения статуса очереди.
+
+    Returns:
+        JSON с информацией о текущей очереди и времени ожидания
+    """
+    try:
+        processing_time_minutes = int(os.getenv('ORDER_PROCESSING_TIME_MINUTES', '10'))
+
+        # Получаем все активные заказы
+        active_orders = Order.query.filter(
+            Order.status.in_(['новый', 'в работе'])
+        ).order_by(Order.created_at.asc()).all()
+
+        current_time = datetime.utcnow()
+        tz = ZoneInfo(app.config['APP_TIMEZONE'])
+        queue_info = []
+        cumulative_time = 0
+
+        for order in active_orders:
+            # Время с момента создания заказа
+            elapsed_time = current_time - order.created_at
+            elapsed_minutes = elapsed_time.total_seconds() / 60
+
+            # Оставшееся время для этого заказа
+            remaining_minutes = max(0, processing_time_minutes - elapsed_minutes)
+            cumulative_time += remaining_minutes
+
+            # Расчетное время готовности
+            estimated_ready_at = current_time + timedelta(minutes=cumulative_time)
+            ready_at_local = estimated_ready_at.replace(tzinfo=timezone.utc).astimezone(tz)
+
+            queue_info.append({
+                'order_id': order.id,
+                'mechanic_name': order.mechanic_name,
+                'plate_number': order.plate_number,
+                'status': order.status,
+                'created_at': order.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'elapsed_minutes': int(elapsed_minutes),
+                'remaining_minutes': int(remaining_minutes),
+                'estimated_ready_at': ready_at_local.strftime('%H:%M')
+            })
+
+        # Время ожидания для нового заказа
+        new_order_wait_time = int(cumulative_time + processing_time_minutes)
+        new_order_ready_at = current_time + timedelta(minutes=new_order_wait_time)
+        new_order_ready_local = new_order_ready_at.replace(tzinfo=timezone.utc).astimezone(tz)
+
+        return jsonify({
+            'success': True,
+            'current_time': current_time.replace(tzinfo=timezone.utc).astimezone(tz).strftime('%Y-%m-%d %H:%M:%S'),
+            'processing_time_minutes': processing_time_minutes,
+            'active_orders_count': len(active_orders),
+            'queue': queue_info,
+            'new_order_estimate': {
+                'wait_minutes': new_order_wait_time,
+                'ready_at': new_order_ready_local.strftime('%H:%M'),
+                'queue_position': len(active_orders) + 1
+            }
+        }), 200
+
+    except Exception as e:
+        print(f"❌ Ошибка получения очереди заказов: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/admin')
