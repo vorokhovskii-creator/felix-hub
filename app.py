@@ -101,6 +101,31 @@ from auth import login_manager, admin_required, mechanic_required, should_notify
 db.init_app(app)
 login_manager.init_app(app)
 
+# Автоматическая миграция базы данных при старте приложения
+def run_migrations():
+    """Выполнить необходимые миграции базы данных"""
+    try:
+        with app.app_context():
+            from sqlalchemy import inspect, text
+            inspector = inspect(db.engine)
+
+            # Проверяем, существует ли таблица orders
+            if 'orders' in inspector.get_table_names():
+                columns = [col['name'] for col in inspector.get_columns('orders')]
+
+                # Если поле estimated_ready_at не существует, добавляем его
+                if 'estimated_ready_at' not in columns:
+                    print("🔄 Выполнение миграции: добавление поля estimated_ready_at...")
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE orders ADD COLUMN estimated_ready_at TIMESTAMP"))
+                        conn.commit()
+                    print("✅ Миграция выполнена успешно!")
+    except Exception as e:
+        print(f"⚠️  Ошибка миграции (не критично): {e}")
+
+# Выполняем миграции при старте
+run_migrations()
+
 # Функция для определения языка пользователя
 def get_locale():
     """Определить текущий язык интерфейса"""
@@ -1224,14 +1249,9 @@ def submit_order():
             is_original=is_original_normalized,
             photo_url=data.get('photo_url'),
             comment=comment_normalized,
-            status='новый'
+            status='новый',
+            estimated_ready_at=ready_time_info['estimated_ready_at']  # Сохраняем расчетное время
         )
-
-        # Сохраняем расчетное время (если поле существует в БД)
-        try:
-            order.estimated_ready_at = ready_time_info['estimated_ready_at']
-        except:
-            pass  # Поле еще не добавлено в БД
         
         db.session.add(order)
         db.session.commit()
