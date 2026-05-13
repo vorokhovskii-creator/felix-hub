@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix: исправлена ошибка форматирования строк в JavaScript *)"
     ]
   }
 }

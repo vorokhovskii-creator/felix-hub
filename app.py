@@ -172,6 +172,7 @@ def inject_status_translator():
         status_map = {
             'новый': 'status_new',
             'в работе': 'status_in_progress',
+            'в ожидании запчасти': 'status_waiting_parts',
             'готово': 'status_ready',
             'выдано': 'status_delivered',
             'отменено': 'status_cancelled'
@@ -861,7 +862,7 @@ def mechanic_orders():
     tz = ZoneInfo(app.config['APP_TIMEZONE'])
 
     # Получаем все активные заказы механика для расчета очереди
-    active_orders = [o for o in orders if o.status in ['новый', 'в работе']]
+    active_orders = [o for o in orders if o.status in ['новый', 'в работе', 'в ожидании запчасти']]
     active_orders.sort(key=lambda x: x.created_at)
 
     cumulative_time = 0
@@ -1058,6 +1059,43 @@ def public_orders():
                     localized_parts.append(part)
         setattr(order, 'selected_parts_localized', sort_selected_parts_by_sort_order(localized_parts, order.category, cache=sort_cache))
 
+    # Рассчитываем время готовности для активных заказов
+    processing_time_minutes = int(os.getenv('ORDER_PROCESSING_TIME_MINUTES', '10'))
+    current_time = datetime.utcnow()
+    tz = ZoneInfo(app.config['APP_TIMEZONE'])
+
+    # Получаем все активные заказы для расчета очереди (не только на текущей странице)
+    all_active_orders = Order.query.filter(
+        Order.status.in_(['новый', 'в работе', 'в ожидании запчасти'])
+    ).order_by(Order.created_at.asc()).all()
+
+    cumulative_time = 0
+    order_times = {}
+
+    for active_order in all_active_orders:
+        elapsed_time = current_time - active_order.created_at
+        elapsed_minutes = elapsed_time.total_seconds() / 60
+        remaining_minutes = max(0, processing_time_minutes - elapsed_minutes)
+        cumulative_time += remaining_minutes
+
+        # Расчетное время готовности
+        estimated_ready_at = current_time + timedelta(minutes=cumulative_time)
+
+        order_times[active_order.id] = {
+            'estimated_minutes': int(cumulative_time),
+            'estimated_ready_at': estimated_ready_at
+        }
+
+    # Добавляем атрибуты к заказам на текущей странице
+    for order in orders:
+        if order.id in order_times:
+            time_info = order_times[order.id]
+            ready_at_local = time_info['estimated_ready_at'].replace(tzinfo=timezone.utc).astimezone(tz)
+
+            setattr(order, 'estimated_minutes', time_info['estimated_minutes'])
+            setattr(order, 'estimated_ready_time', ready_at_local.strftime('%H:%M'))
+            setattr(order, 'estimated_ready_timestamp', int(time_info['estimated_ready_at'].timestamp()))
+
     return render_template(
         'orders_public.html',
         orders=orders,
@@ -1075,7 +1113,7 @@ def calculate_estimated_ready_time():
 
     Логика:
     - Базовое время обработки одного заказа: 10 минут (настраивается через ORDER_PROCESSING_TIME_MINUTES)
-    - Учитываются заказы со статусами 'новый' и 'в работе'
+    - Учитываются заказы со статусами 'новый', 'в работе' и 'в ожидании запчасти'
     - Для каждого активного заказа рассчитывается оставшееся время
     - Новый заказ добавляется в конец очереди
 
@@ -1090,9 +1128,9 @@ def calculate_estimated_ready_time():
     # Базовое время обработки одного заказа (в минутах)
     processing_time_minutes = int(os.getenv('ORDER_PROCESSING_TIME_MINUTES', '10'))
 
-    # Получаем все активные заказы (новый + в работе)
+    # Получаем все активные заказы (новый + в работе + в ожидании запчасти)
     active_orders = Order.query.filter(
-        Order.status.in_(['новый', 'в работе'])
+        Order.status.in_(['новый', 'в работе', 'в ожидании запчасти'])
     ).order_by(Order.created_at.asc()).all()
 
     current_time = datetime.utcnow()

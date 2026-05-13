@@ -292,9 +292,35 @@
 
         .status-badge.status-новый { background: #dbeafe; color: #1e40af; }
         .status-badge.status-в-работе { background: #fef3c7; color: #b45309; }
+        .status-badge.status-в-ожидании-запчасти { background: #fce7f3; color: #9f1239; }
         .status-badge.status-готово { background: #d1fae5; color: #047857; }
         .status-badge.status-выдано { background: #e5e7eb; color: #374151; }
         .status-badge.status-отменено, .status-badge.status-отменён { background: #fee2e2; color: #991b1b; }
+
+        .timer-badge {
+            background: #f0f9ff;
+            color: #1e40af;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .timer-badge.urgent {
+            background: #fef3c7;
+            color: #b45309;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
 
         .order-details {
             display: grid;
@@ -454,7 +480,14 @@
                     <div class="order-card">
                         <div class="order-top">
                             <div class="order-id">{{ _('order') }} №{{ order.id }}</div>
-                            <span class="status-badge status-{{ order.status|replace(' ', '-') }}">{{ get_status_translation(order.status) }}</span>
+                            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                <span class="status-badge status-{{ order.status|replace(' ', '-') }}">{{ get_status_translation(order.status) }}</span>
+                                {% if order.status in ['новый', 'в работе', 'в ожидании запчасти'] and order.estimated_ready_timestamp is defined %}
+                                    <div class="timer-badge" data-timestamp="{{ order.estimated_ready_timestamp }}">
+                                        ⏱️ <span class="countdown">{{ _('ready_in') }} {{ order.estimated_minutes }} {{ _('minutes_short') }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div class="order-details">
@@ -602,6 +635,51 @@
                 params.set('page', '1');
                 window.location.href = `${window.location.pathname}?${params.toString()}`;
             });
+        })();
+
+        // Таймер обратного отсчета для времени готовности заказов
+        (function() {
+            const timerBadges = document.querySelectorAll('.timer-badge[data-timestamp]');
+            if (timerBadges.length === 0) return;
+
+            function updateTimers() {
+                const now = Math.floor(Date.now() / 1000);
+
+                timerBadges.forEach(badge => {
+                    const timestamp = parseInt(badge.dataset.timestamp, 10);
+                    const countdown = badge.querySelector('.countdown');
+                    if (!countdown) return;
+
+                    const remainingSeconds = timestamp - now;
+
+                    if (remainingSeconds <= 0) {
+                        countdown.textContent = '{{ _("ready_at") }} {{ _("now") }}!';
+                        badge.classList.add('urgent');
+                        return;
+                    }
+
+                    const minutes = Math.floor(remainingSeconds / 60);
+                    const seconds = remainingSeconds % 60;
+
+                    // Форматируем время
+                    if (minutes > 0) {
+                        countdown.textContent = `{{ _('ready_in') }} ${minutes} {{ _('minutes_short') }} ${seconds} {{ _('seconds_short') }}`;
+                    } else {
+                        countdown.textContent = `{{ _('ready_in') }} ${seconds} {{ _('seconds_short') }}`;
+                    }
+
+                    // Добавляем класс urgent если осталось меньше 5 минут
+                    if (minutes < 5) {
+                        badge.classList.add('urgent');
+                    } else {
+                        badge.classList.remove('urgent');
+                    }
+                });
+            }
+
+            // Обновляем таймеры каждую секунду
+            updateTimers();
+            setInterval(updateTimers, 1000);
         })();
     </script>
     <div style="text-align: center; padding: 18px 12px; color: #9ca3af; font-size: 12px;">Developed by Vorokhovskii Mikhail</div>

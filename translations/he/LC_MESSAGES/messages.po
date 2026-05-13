@@ -858,3 +858,12 @@ msgstr "דק'"
 
 msgid "ready_at"
 msgstr "מוכן ב"
+
+msgid "status_waiting_parts"
+msgstr "ממתין לחלקים"
+
+msgid "seconds_short"
+msgstr "שנ'"
+
+msgid "now"
+msgstr "עכשיו"

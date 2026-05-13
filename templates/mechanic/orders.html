@@ -168,25 +168,29 @@
             font-weight: 600;
         }
 
-        .status-badge.новый { 
-            background: #dbeafe; 
-            color: #1e40af; 
+        .status-badge.новый {
+            background: #dbeafe;
+            color: #1e40af;
         }
-        .status-badge.в-работе { 
-            background: #fef3c7; 
-            color: #b45309; 
+        .status-badge.в-работе {
+            background: #fef3c7;
+            color: #b45309;
         }
-        .status-badge.готово { 
-            background: #d1fae5; 
-            color: #047857; 
+        .status-badge.в-ожидании-запчасти {
+            background: #fce7f3;
+            color: #9f1239;
         }
-        .status-badge.выдано { 
-            background: #e5e7eb; 
-            color: #374151; 
+        .status-badge.готово {
+            background: #d1fae5;
+            color: #047857;
         }
-        .status-badge.отменено { 
-            background: #fee2e2; 
-            color: #991b1b; 
+        .status-badge.выдано {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        .status-badge.отменено {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .order-details {
@@ -351,6 +355,7 @@
                             <option value="все" {% if request.args.get('status', 'все') == 'все' %}selected{% endif %}>{{ _('all_statuses') }}</option>
                             <option value="новый" {% if request.args.get('status') == 'новый' %}selected{% endif %}>{{ _('status_new') }}</option>
                             <option value="в работе" {% if request.args.get('status') == 'в работе' %}selected{% endif %}>{{ _('status_in_progress') }}</option>
+                            <option value="в ожидании запчасти" {% if request.args.get('status') == 'в ожидании запчасти' %}selected{% endif %}>{{ _('status_waiting_parts') }}</option>
                             <option value="готово" {% if request.args.get('status') == 'готово' %}selected{% endif %}>{{ _('status_ready') }}</option>
                             <option value="выдано" {% if request.args.get('status') == 'выдано' %}selected{% endif %}>{{ _('status_delivered') }}</option>
                             <option value="отменено" {% if request.args.get('status') == 'отменено' %}selected{% endif %}>{{ _('status_cancelled') }}</option>
@@ -386,7 +391,7 @@
                         <div class="order-id">{{ _('order') }} №{{ order.id }}</div>
                         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             <span class="status-badge {{ order.status }}">{{ get_status_translation(order.status) }}</span>
-                            {% if order.status in ['новый', 'в работе'] and order.estimated_minutes is defined %}
+                            {% if order.status in ['новый', 'в работе', 'в ожидании запчасти'] and order.estimated_minutes is defined %}
                                 <span style="background: #f0f9ff; color: #1e40af; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; white-space: nowrap;">
                                     ⏱️ {{ _('ready_in') }} {{ order.estimated_minutes }} {{ _('minutes_short') }} ({{ order.estimated_ready_time }})
                                 </span>

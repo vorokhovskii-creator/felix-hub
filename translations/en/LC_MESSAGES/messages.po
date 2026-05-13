@@ -855,3 +855,12 @@ msgstr "min"
 
 msgid "ready_at"
 msgstr "Ready at"
+
+msgid "status_waiting_parts"
+msgstr "Waiting for parts"
+
+msgid "seconds_short"
+msgstr "sec"
+
+msgid "now"
+msgstr "now"

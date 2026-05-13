@@ -862,3 +862,12 @@ msgstr "мин"
 
 msgid "ready_at"
 msgstr "Готов в"
+
+msgid "status_waiting_parts"
+msgstr "В ожидании запчасти"
+
+msgid "seconds_short"
+msgstr "сек"
+
+msgid "now"
+msgstr "сейчас"
