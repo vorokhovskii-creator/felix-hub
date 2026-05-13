@@ -867,3 +867,6 @@ msgstr "שנ'"
 
 msgid "now"
 msgstr "עכשיו"
+
+msgid "should_be_ready"
+msgstr "אמור להיות מוכן"

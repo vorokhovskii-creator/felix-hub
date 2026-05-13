@@ -871,3 +871,6 @@ msgstr "сек"
 
 msgid "now"
 msgstr "сейчас"
+
+msgid "should_be_ready"
+msgstr "Должен быть готов"

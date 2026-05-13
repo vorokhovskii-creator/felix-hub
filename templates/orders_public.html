@@ -271,15 +271,17 @@
         .order-top {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             gap: 10px;
             margin-bottom: 12px;
+            flex-wrap: wrap;
         }
 
         .order-id {
             font-weight: 900;
             color: #111827;
             font-size: 18px;
+            flex-shrink: 0;
         }
 
         .status-badge {
@@ -302,13 +304,23 @@
             color: #1e40af;
             padding: 8px 14px;
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             margin-top: 8px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 640px) {
+            .timer-badge {
+                font-size: 13px;
+                padding: 6px 10px;
+            }
         }
 
         .timer-badge.urgent {
@@ -653,7 +665,7 @@
                     const remainingSeconds = timestamp - now;
 
                     if (remainingSeconds <= 0) {
-                        countdown.textContent = '{{ _("ready_at") }} {{ _("now") }}!';
+                        countdown.textContent = '{{ _("should_be_ready") }}';
                         badge.classList.add('urgent');
                         return;
                     }

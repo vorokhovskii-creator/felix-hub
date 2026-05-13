@@ -864,3 +864,6 @@ msgstr "sec"
 
 msgid "now"
 msgstr "now"
+
+msgid "should_be_ready"
+msgstr "Should be ready"
