@@ -368,17 +368,27 @@
             background: #fff3cd;
             color: #856404;
         }
-        
+
         .status-в-работе {
             background: #cfe2ff;
             color: #084298;
         }
-        
+
+        .status-в-ожидании-запчасти {
+            background: #fce7f3;
+            color: #9f1239;
+        }
+
         .status-готово {
             background: #d1e7dd;
             color: #0f5132;
         }
-        
+
+        .status-выдано {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
         .status-отменён, .status-отменено {
             background: #f8d7da;
             color: #721c24;
@@ -597,10 +607,12 @@
                     <label>{{ _('status') }}</label>
                     <select id="filterStatus">
                         <option value="все">{{ _('all') }}</option>
-                        <option value="новый">{{ _('new') }}</option>
-                        <option value="в работе">{{ _('in_progress') }}</option>
-                        <option value="готово">{{ _('ready') }}</option>
-                        <option value="отменено">{{ _('cancelled') }}</option>
+                        <option value="новый">{{ _('status_new') }}</option>
+                        <option value="в работе">{{ _('status_in_progress') }}</option>
+                        <option value="в ожидании запчасти">{{ _('status_waiting_parts') }}</option>
+                        <option value="готово">{{ _('status_ready') }}</option>
+                        <option value="выдано">{{ _('status_delivered') }}</option>
+                        <option value="отменено">{{ _('status_cancelled') }}</option>
                     </select>
                 </div>
                 
@@ -1105,13 +1117,14 @@
                             ${order.comment ? escapeHtml(order.comment) : ''}
                         </td>
                         <td>
-                            <select class="status-badge status-${order.status}" 
+                            <select class="status-badge status-${order.status}"
                                     onchange="updateOrderStatus(${order.id}, this.value)">
-                                <option value="новый" ${order.status === 'новый' ? 'selected' : ''}>Новый</option>
-                                <option value="в работе" ${order.status === 'в работе' ? 'selected' : ''}>В работе</option>
-                                <option value="готово" ${order.status === 'готово' ? 'selected' : ''}>Готово</option>
-                                <option value="выдано" ${order.status === 'выдано' ? 'selected' : ''}>Выдано</option>
-                                <option value="отменено" ${order.status === 'отменено' || order.status === 'отменён' ? 'selected' : ''}>Отменено</option>
+                                <option value="новый" ${order.status === 'новый' ? 'selected' : ''}>{{ _('status_new') }}</option>
+                                <option value="в работе" ${order.status === 'в работе' ? 'selected' : ''}>{{ _('status_in_progress') }}</option>
+                                <option value="в ожидании запчасти" ${order.status === 'в ожидании запчасти' ? 'selected' : ''}>{{ _('status_waiting_parts') }}</option>
+                                <option value="готово" ${order.status === 'готово' ? 'selected' : ''}>{{ _('status_ready') }}</option>
+                                <option value="выдано" ${order.status === 'выдано' ? 'selected' : ''}>{{ _('status_delivered') }}</option>
+                                <option value="отменено" ${order.status === 'отменено' || order.status === 'отменён' ? 'selected' : ''}>{{ _('status_cancelled') }}</option>
                             </select>
                         </td>
                         <td>${formatOrderCreatedAt(order.created_at)}</td>
